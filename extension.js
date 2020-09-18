@@ -75,39 +75,41 @@ function activate(context) {
 
           editBuilder.insert(contentStart, "/** ")
           editBuilder.insert(contentEnd, " */")
+
+          return
         }
 
         // multi line comment
         // target all lines between opening and closing tags
-        //   for (
-        //     let i = lineFirst.lineNumber + 1;
-        //     i <= lineLast.lineNumber;
-        //     i += 1
-        //   ) {
-        //     const line = editor.document.lineAt(i)
-        //     // const jsdocComment = line.text.match(/\\s\\+s/)
-        //     const contentStart = new vscode.Position(
-        //       line.lineNumber,
-        //       line.firstNonWhitespaceCharacterIndex
-        //     )
+        for (
+          let i = lineFirst.lineNumber + 1;
+          i <= lineLast.lineNumber;
+          i += 1
+        ) {
+          const line = editor.document.lineAt(i)
+          // const jsdocComment = line.text.match(/\\s\\+s/)
+          const contentStart = new vscode.Position(
+            line.lineNumber,
+            line.firstNonWhitespaceCharacterIndex
+          )
 
-        //     editBuilder.insert(contentStart, " * ")
-        //   }
+          editBuilder.insert(contentStart, " * ")
+        }
 
-        //   const contentStart = new vscode.Position(
-        //     lineFirst.lineNumber,
-        //     lineFirst.firstNonWhitespaceCharacterIndex
-        //   )
-        //   const contentEnd = lineLast.range.end
-        //   const indentation = " ".repeat(
-        //     lineFirst.firstNonWhitespaceCharacterIndex
-        //   )
+        const contentStart = new vscode.Position(
+          lineFirst.lineNumber,
+          lineFirst.firstNonWhitespaceCharacterIndex
+        )
+        const contentEnd = lineLast.range.end
+        const indentation = " ".repeat(
+          lineFirst.firstNonWhitespaceCharacterIndex
+        )
 
-        //   editBuilder.insert(contentStart, `/**\n${indentation} * `)
-        //   editBuilder.insert(contentEnd, `\n${indentation} */`)
+        editBuilder.insert(contentStart, `/**\n${indentation} * `)
+        editBuilder.insert(contentEnd, `\n${indentation} */`)
 
-        //   // if cursor was at end of last line, the comment tag is incorrectly placed
-        //   // after the cursor. this moves the cursor back inside the comment
+        // if cursor was at end of last line, the comment tag is incorrectly placed
+        // after the cursor. this moves the cursor back inside the comment
       })
       // if (
       //   editStatus &&

@@ -167,12 +167,27 @@ function activate(context) {
 
       // single line comment
       if (lineFirst.lineNumber === lineLast.lineNumber) {
+        // selection is at end of line it's on
         if (
-          // cursor is at end of line it's on
-          cursorPos.isAfterOrEqual(editor.document.lineAt(cursorPos).range.end)
+          editor.selection.end.isAfterOrEqual(
+            editor.document.lineAt(editor.selection.end).range.end
+          )
         ) {
-          const newPos = cursorPos.translate(0, -3)
-          editor.selection = new vscode.Selection(newPos, newPos)
+          const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
+
+          if (cursorPos.isEqual(anchorPos)) {
+            editor.selection = new vscode.Selection(
+              adjustedSelectionEndPos,
+              adjustedSelectionEndPos
+            )
+          } else {
+            // ensure cursor is at same side of selection
+            const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
+            editor.selection = new vscode.Selection(
+              isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
+              isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
+            )
+          }
         }
       } else {
         // multiline comment

@@ -71,7 +71,7 @@ function activate(context) {
       // TODO: wrap exact selection when it's only 1 line
 
       // add comment tags
-      const editStatus = await editor.edit((editBuilder) => {
+      const wasInsertSuccessful = await editor.edit((editBuilder) => {
         // single line comment, no selection & selection
         if (lineFirst.lineNumber === lineLast.lineNumber) {
           const contentStart = new vscode.Position(
@@ -114,19 +114,21 @@ function activate(context) {
 
         editBuilder.insert(contentStart, `/**\n${indentation} * `)
         editBuilder.insert(contentEnd, `\n${indentation} */`)
-
-        // if cursor was at end of last line, the comment tag is incorrectly placed
-        // after the cursor. this moves the cursor back inside the comment
       })
-      // if (
-      //   editStatus &&
-      //   lineLast.lineNumber === editor.selection.active.line &&
-      //   editor.selection.active.isAfterOrEqual(end)
-      // ) {
-      //   const cursorPos = editor.selection.active
-      //   const newPos = cursorPos.translate(0, -3)
-      //   editor.selection = new vscode.Selection(newPos, newPos)
-      // }
+
+      // if cursor was at end of last line, the comment tag is errantly placed
+      // before the cursor. this moves the comment tag after the cursor, keeping the
+      // cursor in the original position before the JSDoc was added
+      // vscode doesn't have the ability to add to line index greater than max
+      if (
+        wasInsertSuccessful &&
+        lineLast.lineNumber === editor.selection.active.line &&
+        editor.selection.active.isAfterOrEqual(lineLast.range.end)
+      ) {
+        const cursorPos = editor.selection.active
+        const newPos = cursorPos.translate(0, -3)
+        editor.selection = new vscode.Selection(newPos, newPos)
+      }
     }
   )
 

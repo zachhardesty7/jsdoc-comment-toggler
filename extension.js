@@ -16,9 +16,10 @@ function activate(context) {
       const jsdocStart = lineFirst.text.match(/\/\*\*\s?/)
       const jsdocEnd = lineLast.text.match(/\s?\*\//)
 
-      // remove JSDoc comment chars if present (preserves comment body)
+      // remove jsdoc tags (preserves comment body)
       if (jsdocStart && jsdocEnd) {
         editor.edit((editBuilder) => {
+          // single line comment, no selection & selection
           if (lineFirst.lineNumber === lineLast.lineNumber) {
             editBuilder.delete(
               new vscode.Range(
@@ -40,33 +41,19 @@ function activate(context) {
             return
           }
 
-          const startPosStart = new vscode.Position(
-            lineFirst.lineNumber,
-            jsdocStart.index
-          )
-          const startPosEnd = new vscode.Position(
-            lineFirst.lineNumber,
-            jsdocStart.index + jsdocStart[0].length
-          )
-          const endPosStart = new vscode.Position(
-            lineLast.lineNumber,
-            jsdocEnd.index
-          )
-          const endPosEnd = new vscode.Position(
-            lineLast.lineNumber,
-            jsdocEnd.index + jsdocEnd[0].length
-          )
+          // multi line comment
+          // open & close tags (first and last line)
+          editBuilder.delete(lineFirst.range)
+          editBuilder.delete(lineLast.range)
 
-          editBuilder.delete(new vscode.Range(startPosStart, startPosEnd))
-          editBuilder.delete(new vscode.Range(endPosStart, endPosEnd))
-
+          // continuation comment line *'s
           for (
             let i = lineFirst.lineNumber + 1;
             i <= lineLast.lineNumber - 1;
             i += 1
           ) {
             const line = editor.document.lineAt(i)
-            const jsdocComment = line.text.match(/\\s\\+s/)
+            const jsdocComment = line.text.match(/\s\*\s/)
             editBuilder.delete(
               new vscode.Range(
                 line.lineNumber,
@@ -83,9 +70,9 @@ function activate(context) {
 
       // TODO: wrap exact selection when it's only 1 line
 
-      // commit changes
+      // add comment tags
       const editStatus = await editor.edit((editBuilder) => {
-        // single line comment, no selection
+        // single line comment, no selection & selection
         if (lineFirst.lineNumber === lineLast.lineNumber) {
           const contentStart = new vscode.Position(
             lineFirst.lineNumber,

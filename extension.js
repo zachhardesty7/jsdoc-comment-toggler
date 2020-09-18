@@ -132,14 +132,16 @@ function activate(context) {
         if (lineFirst.lineNumber === lineLast.lineNumber) {
           const newPos = cursorPos.translate(0, -3)
           editor.selection = new vscode.Selection(newPos, newPos)
+        } else {
+          // multiline comment
+          const newPos = editor.document.lineAt(
+            editor.selection.active.line - 1
+          ).range.end
+          editor.selection = new vscode.Selection(
+            editor.selection.anchor,
+            newPos
+          )
         }
-        // else {
-        //   // multiline comment
-        //   editor.selection = new vscode.Selection(
-        //     lineLast.range.end,
-        //     lineLast.range.end
-        //   )
-        // }
       }
     }
   )

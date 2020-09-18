@@ -1,8 +1,8 @@
 {
-  "name": "jsdoc-commenter",
-  "displayName": "jsdoc-commenter",
+  "name": "jsdoc-comment-toggler",
+  "displayName": "jsdoc-comment-toggler",
   "description": "Toggle JSDoc comment on line or selection",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "eslintConfig": {
     "extends": "hardesty/prettier"
   },
@@ -16,13 +16,13 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:jsdoc-commenter.toggle"
+    "onCommand:jsdoc-comment-toggler.toggle"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "jsdoc-commenter.toggle",
+        "command": "jsdoc-comment-toggler.toggle",
         "title": "Toggle JSDoc Comment"
       }
     ]

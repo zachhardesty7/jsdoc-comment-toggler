@@ -16,9 +16,30 @@ function activate(context) {
       const jsdocStart = lineFirst.text.match(/\/\*\*\s?/)
       const jsdocEnd = lineLast.text.match(/\s?\*\//)
 
-      // delete marker if present (preserves comment chars)
+      // remove JSDoc comment chars if present (preserves comment body)
       if (jsdocStart && jsdocEnd) {
         editor.edit((editBuilder) => {
+          if (lineFirst.lineNumber === lineLast.lineNumber) {
+            editBuilder.delete(
+              new vscode.Range(
+                lineFirst.lineNumber,
+                jsdocStart.index,
+                lineFirst.lineNumber,
+                jsdocStart.index + jsdocStart[0].length
+              )
+            )
+            editBuilder.delete(
+              new vscode.Range(
+                lineLast.lineNumber,
+                jsdocEnd.index,
+                lineLast.lineNumber,
+                jsdocEnd.index + jsdocEnd[0].length
+              )
+            )
+
+            return
+          }
+
           const startPosStart = new vscode.Position(
             lineFirst.lineNumber,
             jsdocStart.index
@@ -65,7 +86,6 @@ function activate(context) {
       // commit changes
       const editStatus = await editor.edit((editBuilder) => {
         // single line comment, no selection
-        // positions
         if (lineFirst.lineNumber === lineLast.lineNumber) {
           const contentStart = new vscode.Position(
             lineFirst.lineNumber,
@@ -80,7 +100,7 @@ function activate(context) {
         }
 
         // multi line comment
-        // target all lines between opening and closing tags
+        // target all lines between opening tag exclusive and closing tag inclusive
         for (
           let i = lineFirst.lineNumber + 1;
           i <= lineLast.lineNumber;

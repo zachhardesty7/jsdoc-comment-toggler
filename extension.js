@@ -1,9 +1,21 @@
 const vscode = require("vscode")
 
+/**
+ * @param {vscode.TextLine | number} line - input
+ * @returns {vscode.TextLine} output
+ */
 const getPrevLine = (line) =>
-  vscode.window.activeTextEditor.document.lineAt(line.lineNumber - 1)
+  vscode.window.activeTextEditor.document.lineAt(
+    (typeof line !== "number" ? line.lineNumber : line) - 1
+  )
+/**
+ * @param {vscode.TextLine | number} line - input
+ * @returns {vscode.TextLine} output
+ */
 const getNextLine = (line) =>
-  vscode.window.activeTextEditor.document.lineAt(line.lineNumber + 1)
+  vscode.window.activeTextEditor.document.lineAt(
+    (typeof line !== "number" ? line.lineNumber : line) + 1
+  )
 
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
@@ -149,21 +161,62 @@ function activate(context) {
       // cursor in the original position before the JSDoc was added
       // vscode doesn't have the ability to add to line index greater than max
       const cursorPos = editor.selection.active
-      if (
-        wasInsertSuccessful &&
-        // cursor is at end of line it's on
-        cursorPos.isAfterOrEqual(editor.document.lineAt(cursorPos).range.end)
-      ) {
-        // single line comment
-        if (lineFirst.lineNumber === lineLast.lineNumber) {
+      const anchorPos = editor.selection.anchor
+
+      if (!wasInsertSuccessful) return
+
+      // single line comment
+      if (lineFirst.lineNumber === lineLast.lineNumber) {
+        if (
+          // cursor is at end of line it's on
+          cursorPos.isAfterOrEqual(editor.document.lineAt(cursorPos).range.end)
+        ) {
           const newPos = cursorPos.translate(0, -3)
           editor.selection = new vscode.Selection(newPos, newPos)
-        } else {
-          // multiline comment
-          const newPos = editor.document.lineAt(cursorPos.line - 1).range.end
+        }
+      } else {
+        // multiline comment
+        // selection ends at end of line
+        if (
+          editor.selection.end.isAfterOrEqual(
+            editor.document.lineAt(editor.selection.end).range.end
+          )
+        ) {
+          const adjustedSelectionEndPos = getPrevLine(editor.selection.end.line)
+            .range.end
+
+          // ensure cursor is at same side of selection
+          const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
           editor.selection = new vscode.Selection(
-            editor.selection.anchor,
-            newPos
+            isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
+            isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
+          )
+        }
+
+        // selection starts before first non-whitespace char of line
+        if (
+          editor.selection.start.isBefore(
+            new vscode.Position(
+              editor.selection.start.line,
+              editor.document.lineAt(
+                editor.selection.start
+              ).firstNonWhitespaceCharacterIndex
+            )
+          )
+        ) {
+          const adjustedSelectionStartLine = getNextLine(
+            editor.selection.start.line
+          )
+          const adjustedSelectionStartPos = new vscode.Position(
+            adjustedSelectionStartLine.lineNumber,
+            adjustedSelectionStartLine.firstNonWhitespaceCharacterIndex + 2
+          )
+
+          // ensure cursor is at same side of selection
+          const isCursorAtStart = cursorPos.isEqual(editor.selection.start)
+          editor.selection = new vscode.Selection(
+            isCursorAtStart ? editor.selection.end : adjustedSelectionStartPos,
+            isCursorAtStart ? adjustedSelectionStartPos : editor.selection.end
           )
         }
       }

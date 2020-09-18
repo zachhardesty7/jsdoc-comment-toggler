@@ -16,6 +16,12 @@ const getNextLine = (line) =>
   vscode.window.activeTextEditor.document.lineAt(
     (typeof line !== "number" ? line.lineNumber : line) + 1
   )
+/**
+ * @param {vscode.TextEditor} editor - context
+ * @returns {boolean} is any text selected
+ */
+const hasSelection = (editor) =>
+  !editor.selection.active.isEqual(editor.selection.anchor)
 
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
@@ -112,16 +118,22 @@ function activate(context) {
 
       // add comment tags
       const wasInsertSuccessful = await editor.edit((editBuilder) => {
-        // single line comment, no selection & selection
+        // single line comment
         if (lineFirst.lineNumber === lineLast.lineNumber) {
-          const contentStart = new vscode.Position(
-            lineFirst.lineNumber,
-            lineFirst.firstNonWhitespaceCharacterIndex
-          )
-          const contentEnd = lineLast.range.end
+          if (hasSelection(editor)) {
+            editBuilder.insert(editor.selection.start, "/** ")
+            editBuilder.insert(editor.selection.end, " */")
+          } else {
+            // no selection
+            const contentStart = new vscode.Position(
+              lineFirst.lineNumber,
+              lineFirst.firstNonWhitespaceCharacterIndex
+            )
+            const contentEnd = lineLast.range.end
 
-          editBuilder.insert(contentStart, "/** ")
-          editBuilder.insert(contentEnd, " */")
+            editBuilder.insert(contentStart, "/** ")
+            editBuilder.insert(contentEnd, " */")
+          }
 
           return
         }
@@ -167,27 +179,23 @@ function activate(context) {
 
       // single line comment
       if (lineFirst.lineNumber === lineLast.lineNumber) {
-        // selection is at end of line it's on
-        if (
-          editor.selection.end.isAfterOrEqual(
-            editor.document.lineAt(editor.selection.end).range.end
-          )
-        ) {
-          const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
+        const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
 
-          if (cursorPos.isEqual(anchorPos)) {
-            editor.selection = new vscode.Selection(
-              adjustedSelectionEndPos,
-              adjustedSelectionEndPos
-            )
-          } else {
-            // ensure cursor is at same side of selection
-            const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
-            editor.selection = new vscode.Selection(
-              isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
-              isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
-            )
-          }
+        if (hasSelection(editor)) {
+          // any selection
+          const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
+          editor.selection = new vscode.Selection(
+            isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
+            isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
+          )
+        } else if (
+          cursorPos.isEqual(editor.document.lineAt(cursorPos).range.end)
+        ) {
+          // no selection but cursor at end of line
+          editor.selection = new vscode.Selection(
+            adjustedSelectionEndPos,
+            adjustedSelectionEndPos
+          )
         }
       } else {
         // multiline comment

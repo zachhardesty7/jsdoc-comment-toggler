@@ -1,5 +1,13 @@
 const vscode = require("vscode")
 
+const getPrevLine = (line) =>
+  vscode.window.activeTextEditor.document.lineAt(line.lineNumber - 1)
+const getNextLine = (line) =>
+  vscode.window.activeTextEditor.document.lineAt(line.lineNumber + 1)
+
+const JSDOC_START_TAG = /\/\*\*\s?/
+const JSDOC_END_TAG = /\s?\*\//
+
 /**
  * @param {vscode.ExtensionContext} context - default param
  */
@@ -10,11 +18,31 @@ function activate(context) {
       const editor = vscode.window.activeTextEditor
       if (!editor) return
 
-      const lineFirst = editor.document.lineAt(editor.selection.start.line)
-      const lineLast = editor.document.lineAt(editor.selection.end.line)
+      let lineFirst = editor.document.lineAt(editor.selection.start.line)
+      let lineLast = editor.document.lineAt(editor.selection.end.line)
 
-      const jsdocStart = lineFirst.text.match(/\/\*\*\s?/)
-      const jsdocEnd = lineLast.text.match(/\s?\*\//)
+      let jsdocStart = lineFirst.text.match(JSDOC_START_TAG)
+      let jsdocEnd = lineLast.text.match(JSDOC_END_TAG)
+
+      // use start tag on prev line if it exists
+      if (!jsdocStart) {
+        const lineBefore = getPrevLine(lineFirst)
+        const jsdocMatch = lineBefore.text.match(JSDOC_START_TAG)
+        if (jsdocMatch) {
+          lineFirst = lineBefore
+          jsdocStart = jsdocMatch
+        }
+      }
+
+      // use end tag on prev line if it exists
+      if (!jsdocEnd) {
+        const lineAfter = getNextLine(lineLast)
+        const jsdocMatch = lineAfter.text.match(JSDOC_END_TAG)
+        if (jsdocMatch) {
+          lineLast = lineAfter
+          jsdocEnd = jsdocMatch
+        }
+      }
 
       // remove jsdoc tags (preserves comment body)
       if (jsdocStart && jsdocEnd) {
@@ -43,8 +71,8 @@ function activate(context) {
 
           // multi line comment
           // open & close tags (first and last line)
-          editBuilder.delete(lineFirst.range)
-          editBuilder.delete(lineLast.range)
+          editBuilder.delete(lineFirst.rangeIncludingLineBreak)
+          editBuilder.delete(lineLast.rangeIncludingLineBreak)
 
           // continuation comment line *'s
           for (
@@ -120,23 +148,19 @@ function activate(context) {
       // before the cursor. this moves the comment tag after the cursor, keeping the
       // cursor in the original position before the JSDoc was added
       // vscode doesn't have the ability to add to line index greater than max
+      const cursorPos = editor.selection.active
       if (
         wasInsertSuccessful &&
         // cursor is at end of line it's on
-        editor.selection.active.isAfterOrEqual(
-          editor.document.lineAt(editor.selection.active).range.end
-        )
+        cursorPos.isAfterOrEqual(editor.document.lineAt(cursorPos).range.end)
       ) {
-        const cursorPos = editor.selection.active
         // single line comment
         if (lineFirst.lineNumber === lineLast.lineNumber) {
           const newPos = cursorPos.translate(0, -3)
           editor.selection = new vscode.Selection(newPos, newPos)
         } else {
           // multiline comment
-          const newPos = editor.document.lineAt(
-            editor.selection.active.line - 1
-          ).range.end
+          const newPos = editor.document.lineAt(cursorPos.line - 1).range.end
           editor.selection = new vscode.Selection(
             editor.selection.anchor,
             newPos

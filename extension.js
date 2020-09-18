@@ -122,12 +122,24 @@ function activate(context) {
       // vscode doesn't have the ability to add to line index greater than max
       if (
         wasInsertSuccessful &&
-        lineLast.lineNumber === editor.selection.active.line &&
-        editor.selection.active.isAfterOrEqual(lineLast.range.end)
+        // cursor is at end of line it's on
+        editor.selection.active.isAfterOrEqual(
+          editor.document.lineAt(editor.selection.active).range.end
+        )
       ) {
         const cursorPos = editor.selection.active
-        const newPos = cursorPos.translate(0, -3)
-        editor.selection = new vscode.Selection(newPos, newPos)
+        // single line comment
+        if (lineFirst.lineNumber === lineLast.lineNumber) {
+          const newPos = cursorPos.translate(0, -3)
+          editor.selection = new vscode.Selection(newPos, newPos)
+        }
+        // else {
+        //   // multiline comment
+        //   editor.selection = new vscode.Selection(
+        //     lineLast.range.end,
+        //     lineLast.range.end
+        //   )
+        // }
       }
     }
   )

@@ -1,4 +1,2 @@
-/**
- * export const foo = "bar"
- * export const bar = "baz"
- */
+export const foo = "bar"
+export const bar = "baz"

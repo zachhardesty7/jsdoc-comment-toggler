@@ -48,8 +48,8 @@ suite("Single Line Comment Tests", () => {
 
   test("Add when cursor in middle", async () => {
     const [editor, result] = await loadFile("singleAdd.js")
-    const cursorBeforePos = editor.selection.active.translate(1, 3)
-    editor.selection = new vscode.Selection(cursorBeforePos, cursorBeforePos)
+    const cursorPrePos = new vscode.Position(1, 3)
+    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
 
     // vscode.commands.executeCommand("jsdoc-comment-toggler.toggle")
     await Extension.toggleJSDocComment()
@@ -62,28 +62,20 @@ suite("Single Line Comment Tests", () => {
     )
 
     // verify cursor & selection positions
-    assertEditorCursorEquals(editor, cursorBeforePos.translate(0, 4))
-    assertEditorAnchorEquals(editor, cursorBeforePos.translate(0, 4))
+    assertEditorCursorEquals(editor, cursorPrePos.translate(0, 4))
+    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
 
-    vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
-  // test("Add when cursor or selection is at end", async () => {
-  //   const [editor, result] = await loadFile("singleAddSelectionBefore.js")
-  //   const cursorBeforePos = editor.selection.active.translate(1, 1)
-  //   editor.selection = new vscode.Selection(cursorBeforePos, cursorBeforePos)
 
-  //   vscode.commands.executeCommand("workbench.action.closeActiveEditor")
-  // })
-  test("Add when cursor or selection is before first non-whitespace", async () => {
-    const [editor, result] = await loadFile("singleAddSelectionBefore.js")
-    const cursorBeforePos = new vscode.Position(1, 1)
-    editor.selection = new vscode.Selection(cursorBeforePos, cursorBeforePos)
-    console.log("editor.selection", editor.selection)
+  test("Add when cursor is at end", async () => {
+    const [editor, result] = await loadFile("singleAddCursorBefore.js")
+    const cursorPrePos = new vscode.Position(1, 13)
+    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
 
     await Extension.toggleJSDocComment()
 
     // verify textual content
-    console.log("result", result)
     assert.strictEqual(
       editor.document.getText(),
       result,
@@ -91,16 +83,53 @@ suite("Single Line Comment Tests", () => {
     )
 
     // verify cursor & selection positions
-    assertEditorCursorEquals(editor, cursorBeforePos)
-    assertEditorAnchorEquals(editor, cursorBeforePos)
+    assertEditorCursorEquals(editor, cursorPrePos.translate(0, 4))
+    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
 
-    vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
-  // test("Remove", async () => {
-  //   const [editor, result] = await loadFile("singleRemove.js")
-  // const cursorBeforePos = editor.selection.active.translate(1, 3)
-  //   vscode.commands.executeCommand("workbench.action.closeActiveEditor")
-  // })
+
+  test("Add when cursor is before first non-whitespace", async () => {
+    const [editor, result] = await loadFile("singleAddCursorBefore.js")
+    const cursorPrePos = new vscode.Position(1, 1)
+    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
+
+    await Extension.toggleJSDocComment()
+
+    // verify textual content
+    assert.strictEqual(
+      editor.document.getText(),
+      result,
+      "incorrect textual content"
+    )
+
+    // verify cursor & selection positions
+    assertEditorCursorEquals(editor, cursorPrePos)
+    assertEditorAnchorEquals(editor, cursorPrePos)
+
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+  })
+
+  test("Remove", async () => {
+    const [editor, result] = await loadFile("singleRemove.js")
+    const cursorPrePos = new vscode.Position(1, 20)
+    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
+
+    await Extension.toggleJSDocComment()
+
+    // verify textual content
+    assert.strictEqual(
+      editor.document.getText(),
+      result,
+      "incorrect textual content"
+    )
+
+    // verify cursor & selection positions
+    assertEditorCursorEquals(editor, cursorPrePos.translate(0, -7))
+    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, -7))
+
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+  })
 })
 
 suite("Multi Line Comment Tests", () => {

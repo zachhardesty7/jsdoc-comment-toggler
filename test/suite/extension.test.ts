@@ -181,27 +181,28 @@ describe("Multi Line Comment Tests", () => {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
-  // test("Adds when selection is at end", async () => {
-  //   const [editor, result] = await loadFile("multiAdd.js")
-  //   const cursorPrePos = new vscode.Position(1, 3)
-  //   editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
+  it("Adds when selection is at end", async () => {
+    const [editor, result] = await loadFile("multiAdd.js")
+    const activePrePos = new vscode.Position(1, 5)
+    const anchorPrePos = new vscode.Position(2, 13)
+    editor.selection = new vscode.Selection(anchorPrePos, activePrePos)
 
-  //   // vscode.commands.executeCommand("jsdoc-comment-toggler.toggle")
-  //   await Extension.toggleJSDocComment()
+    // vscode.commands.executeCommand("jsdoc-comment-toggler.toggle")
+    await Extension.toggleJSDocComment()
 
-  //   // verify textual content
-  //   assert.strictEqual(
-  //     editor.document.getText(),
-  //     result,
-  //     "incorrect textual content"
-  //   )
+    // verify textual content
+    assert.strictEqual(
+      editor.document.getText(),
+      result,
+      "incorrect textual content"
+    )
 
-  //   // verify cursor & selection positions
-  //   assertEditorCursorEquals(editor, cursorPrePos.translate(0, 4))
-  //   assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
+    // verify cursor & selection positions
+    assertEditorCursorEquals(editor, activePrePos.translate(1, 3))
+    assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
 
-  //   await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
-  // })
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+  })
 
   // test("Removes when all lines, including open and close tags, are selected", async () => {
   //   const [editor, result] = await loadFile("multiRemove.js")

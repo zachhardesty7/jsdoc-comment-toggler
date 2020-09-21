@@ -1,8 +1,8 @@
-import * as fs from "fs"
 /* eslint-disable import/no-unresolved */
 /* eslint-disable import/extensions */
-/* global suite, test */
+/* global describe, it */
 
+import * as fs from "fs"
 import * as assert from "assert"
 import * as path from "path"
 import * as vscode from "vscode"
@@ -17,11 +17,15 @@ const assertEditorCursorEquals = (
 ) => {
   const cursorPos = editor.selection.active
 
-  assert.strictEqual(cursorPos.line, target.line, "cursor on incorrect line")
+  assert.strictEqual(
+    cursorPos.line,
+    target.line,
+    `cursor on incorrect line\n${cursorPos}`
+  )
   assert.strictEqual(
     cursorPos.character,
     target.character,
-    "cursor at incorrect pos"
+    `cursor at incorrect pos\n${cursorPos}`
   )
 }
 
@@ -34,19 +38,19 @@ const assertEditorAnchorEquals = (
   assert.strictEqual(
     anchorPos.line,
     target.line,
-    "anchor (other end of selection) on incorrect line"
+    `anchor (other end of selection) on incorrect line\n${anchorPos}`
   )
   assert.strictEqual(
     anchorPos.character,
     target.character,
-    "anchor (other end of selection) at incorrect pos"
+    `anchor (other end of selection) at incorrect pos\n${anchorPos}`
   )
 }
 
-suite("Single Line Comment Tests", () => {
+describe("Single Line Comment Tests", () => {
   vscode.window.showInformationMessage("Start all Single Line tests.")
 
-  test("Add when cursor in middle", async () => {
+  it("Adds when cursor in middle", async () => {
     const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 3)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -68,7 +72,7 @@ suite("Single Line Comment Tests", () => {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
-  test("Add when cursor is at end", async () => {
+  it("Adds when cursor is at end", async () => {
     const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 13)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -89,7 +93,7 @@ suite("Single Line Comment Tests", () => {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
-  test("Add when cursor is before first non-whitespace", async () => {
+  it("Adds when cursor is before first non-whitespace", async () => {
     const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 1)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -110,7 +114,7 @@ suite("Single Line Comment Tests", () => {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
-  test("Remove", async () => {
+  it("Removes", async () => {
     const [editor, result] = await loadFile("singleRemove.js")
     const cursorPrePos = new vscode.Position(1, 20)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -132,10 +136,10 @@ suite("Single Line Comment Tests", () => {
   })
 })
 
-suite("Multi Line Comment Tests", () => {
+describe("Multi Line Comment Tests", () => {
   vscode.window.showInformationMessage("Start all Multi Line tests.")
 
-  test("Add", async () => {
+  it("Adds", async () => {
     const [editor, result] = await loadFile("multiAdd.js")
     const activePrePos = new vscode.Position(1, 5)
     const anchorPrePos = new vscode.Position(2, 5)
@@ -158,7 +162,7 @@ suite("Multi Line Comment Tests", () => {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
-  test("Add when selection is before first non-whitespace of line", async () => {
+  it("Adds when selection is before first non-whitespace of line", async () => {
     const [editor, result] = await loadFile("multiAdd.js")
     const activePrePos = new vscode.Position(1, 1)
     const anchorPrePos = new vscode.Position(2, 1)
@@ -181,7 +185,7 @@ suite("Multi Line Comment Tests", () => {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
-  // test("Add when selection is at end", async () => {
+  // test("Adds when selection is at end", async () => {
   //   const [editor, result] = await loadFile("multiAdd.js")
   //   const cursorPrePos = new vscode.Position(1, 3)
   //   editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -202,7 +206,8 @@ suite("Multi Line Comment Tests", () => {
 
   //   await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   // })
-  // test("Remove when all lines, including open and close tags, are selected", async () => {
+
+  // test("Removes when all lines, including open and close tags, are selected", async () => {
   //   const [editor, result] = await loadFile("multiRemove.js")
   //   const cursorPrePos = new vscode.Position(1, 3)
   //   editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -223,7 +228,8 @@ suite("Multi Line Comment Tests", () => {
 
   //   await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   // })
-  // test("Remove when either or both of the start and end tags are not selected", async () => {
+
+  // test("Removes when either or both of the start and end tags are not selected", async () => {
   //   const [editor, result] = await loadFile("multiRemove.js")
   //   const cursorPrePos = new vscode.Position(1, 3)
   //   editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)

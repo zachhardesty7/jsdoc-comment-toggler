@@ -8,7 +8,7 @@ export const run = (
 ): void => {
   // Create the mocha test
   const mocha = new Mocha({
-    ui: "tdd",
+    ui: "bdd",
     color: true,
   })
 

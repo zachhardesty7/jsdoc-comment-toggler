@@ -1,4 +1,6 @@
-/**
- * export const foo = "bar"
- * export const bar = "baz"
- */
+export const obj = {
+  /**
+   * foo: "bar",
+   * bar: "baz",
+   */
+}

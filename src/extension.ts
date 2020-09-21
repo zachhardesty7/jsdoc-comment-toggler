@@ -1,36 +1,75 @@
-// eslint-disable jsdoc/require-param-type
-// eslint-disable-next-line import/no-unresolved
-import * as vscode from "vscode"
+import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 
 // regexes
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
 const JSDOC_LINE_CHAR = /\s\*\s/
 
-const getPrevLine = (line: vscode.TextLine | number): vscode.TextLine =>
-  vscode.window.activeTextEditor!.document.lineAt(
-    (typeof line !== "number" ? line.lineNumber : line) - 1
-  )
+/**
+ * helper to yeet the entire extension when no editor, should **NOT** be possible to
+ * ever trigger
+ */
+const throwMissingEditor = () => {
+  throw new Error("no vscode active editor")
+}
 
 /**
- * @param {vscode.TextLine | number} line - input
- * @returns {vscode.TextLine} output
+ * @param line - input
+ * @returns the line directly proceeding the input
+ */
+const getPrevLine = (line: vscode.TextLine | number): vscode.TextLine =>
+  vscode.window.activeTextEditor?.document.lineAt(
+    (typeof line !== "number" ? line.lineNumber : line) - 1
+  ) ?? throwMissingEditor()
+
+/**
+ * @param line - input
+ * @returns the line directly following the input
  */
 const getNextLine = (line: vscode.TextLine | number): vscode.TextLine =>
-  vscode.window.activeTextEditor!.document.lineAt(
-    (typeof line !== "number" ? line.lineNumber : line) + 1
-  )
+  vscode.window.activeTextEditor?.document.lineAt(
+    (typeof line === "number" ? line : line.lineNumber) + 1
+  ) ?? throwMissingEditor()
 
+/**
+ * @param editor - vscode's currently active text editor
+ * @returns whether any text is currently selected
+ */
 const hasSelection = (editor: vscode.TextEditor): boolean =>
   !editor.selection.active.isEqual(editor.selection.anchor)
 
-const getContentStartPos = (line: vscode.TextLine): vscode.Position =>
-  new vscode.Position(line.lineNumber, line.firstNonWhitespaceCharacterIndex)
+/**
+ * @param line - target
+ * @returns position of first non-whitespace character on target line
+ */
+const getContentStartPos = (line: vscode.TextLine | number): vscode.Position =>
+  !vscode.window.activeTextEditor
+    ? throwMissingEditor()
+    : new vscode.Position(
+        typeof line === "number" ? line : line.lineNumber,
+        (typeof line === "number"
+          ? vscode.window.activeTextEditor.document.lineAt(line)
+          : line
+        ).firstNonWhitespaceCharacterIndex
+      )
 
-const getContentEndPos = (line: vscode.TextLine): vscode.Position =>
-  line.range.end
+/**
+ * @param line - target
+ * @returns position of last character on target line
+ */
+export const getContentEndPos = (
+  line: vscode.TextLine | number
+): vscode.Position =>
+  (typeof line === "number"
+    ? vscode.window.activeTextEditor?.document.lineAt(line)
+    : line
+  )?.range.end ?? throwMissingEditor()
 
-export const toggleJSDocComment = async () => {
+/**
+ * primary extension action, deletes the JSDoc tags on selected lines if present or adds
+ * a JSDoc wrapping the selected lines of text comment
+ */
+export const toggleJSDocComment = async (): Promise<void> => {
   const editor = vscode.window.activeTextEditor
   if (!editor) return
 
@@ -86,8 +125,6 @@ export const toggleJSDocComment = async () => {
       return
     }
 
-    console.error("CANT GET HERE")
-
     // multi line comment
     // open & close tags (first and last line)
     editBuilder.delete(lineFirst.rangeIncludingLineBreak)
@@ -136,8 +173,7 @@ export const toggleJSDocComment = async () => {
     // multi line comment
     // target all lines between opening tag exclusive and closing tag inclusive
     for (let i = lineFirst.lineNumber + 1; i <= lineLast.lineNumber; i += 1) {
-      const line = editor.document.lineAt(i)
-      editBuilder.insert(getContentStartPos(line), " * ")
+      editBuilder.insert(getContentStartPos(i), " * ")
     }
 
     const indentation = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
@@ -174,16 +210,20 @@ export const toggleJSDocComment = async () => {
         adjustedSelectionEndPos
       )
     }
+    // else {
+    //  no selection, cursor somewhere in the middle
+    //  no adjustment needed
+    // }
   } else {
     // multiline comment
     // selection ends at end of line
     if (
       editor.selection.end.isAfterOrEqual(
-        getContentEndPos(editor.document.lineAt(editor.selection.end))
+        getContentEndPos(editor.selection.end.line)
       )
     ) {
       const adjustedSelectionEndPos = getContentEndPos(
-        getPrevLine(editor.selection.end.line)
+        editor.selection.end.line - 1
       )
 
       // ensure cursor is at original side of the selection
@@ -197,14 +237,11 @@ export const toggleJSDocComment = async () => {
     // selection starts before first non-whitespace char of line
     if (
       editor.selection.start.isBefore(
-        getContentStartPos(editor.document.lineAt(editor.selection.start))
+        getContentStartPos(editor.selection.start.line)
       )
     ) {
-      const adjustedSelectionStartLine = getNextLine(
-        editor.selection.start.line
-      )
       const adjustedSelectionStartPos = getContentStartPos(
-        adjustedSelectionStartLine
+        editor.selection.start.line + 1
       ).translate(0, 2)
 
       // ensure cursor is at same side of selection
@@ -217,7 +254,7 @@ export const toggleJSDocComment = async () => {
   }
 }
 
-export const activate = (context: vscode.ExtensionContext) => {
+export const activate = (context: vscode.ExtensionContext): void => {
   const disposable = vscode.commands.registerCommand(
     "jsdoc-comment-toggler.toggle",
     toggleJSDocComment

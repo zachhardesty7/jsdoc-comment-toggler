@@ -51,6 +51,7 @@
   "main": "./out/src/extension.js",
   "publisher": "zachhardesty",
   "repository": "https://github.com/zachhardesty7/jsdoc-comment-toggler",
+  "license": "MIT",
   "contributes": {
     "commands": [
       {

@@ -100,7 +100,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
   }
 
   // #region - rm jsdoc tags (preserves comment body)
-  editor.edit((editBuilder) => {
+  await editor.edit((editBuilder) => {
     if (!jsdocStart?.index || !jsdocEnd?.index) return
 
     // single line comment, no selection & selection
@@ -192,19 +192,19 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
   // single line comment
   if (lineFirst.lineNumber === lineLast.lineNumber) {
-    const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
-
     if (hasSelection(editor)) {
       // any selection
+      const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
+
       const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
       editor.selection = new vscode.Selection(
         isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
         isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
       )
-    } else if (
-      cursorPos.isEqual(getContentEndPos(editor.document.lineAt(cursorPos)))
-    ) {
-      // no selection but cursor at end of line
+    } else if (cursorPos.isEqual(getContentEndPos(cursorPos.line))) {
+      // no selection, cursor at end of line
+      const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
+
       editor.selection = new vscode.Selection(
         adjustedSelectionEndPos,
         adjustedSelectionEndPos

@@ -17,15 +17,11 @@ const assertEditorCursorEquals = (
 ) => {
   const cursorPos = editor.selection.active
 
-  assert.strictEqual(
-    cursorPos.line,
-    target.line,
-    `cursor on incorrect line\n${cursorPos}`
-  )
+  assert.strictEqual(cursorPos.line, target.line, "cursor on incorrect line")
   assert.strictEqual(
     cursorPos.character,
     target.character,
-    `cursor at incorrect pos\n${cursorPos}`
+    "cursor at incorrect pos"
   )
 }
 
@@ -38,12 +34,12 @@ const assertEditorAnchorEquals = (
   assert.strictEqual(
     anchorPos.line,
     target.line,
-    `anchor (other end of selection) on incorrect line\n${anchorPos}`
+    "anchor (other end of selection) on incorrect line"
   )
   assert.strictEqual(
     anchorPos.character,
     target.character,
-    `anchor (other end of selection) at incorrect pos\n${anchorPos}`
+    "anchor (other end of selection) at incorrect pos"
   )
 }
 
@@ -165,7 +161,7 @@ describe("Multi Line Comment Tests", () => {
   it("Adds when selection is before first non-whitespace of line", async () => {
     const [editor, result] = await loadFile("multiAdd.js")
     const activePrePos = new vscode.Position(1, 1)
-    const anchorPrePos = new vscode.Position(2, 1)
+    const anchorPrePos = new vscode.Position(2, 5)
     editor.selection = new vscode.Selection(anchorPrePos, activePrePos)
 
     // vscode.commands.executeCommand("jsdoc-comment-toggler.toggle")

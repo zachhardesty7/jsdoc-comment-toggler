@@ -69,7 +69,7 @@ suite("Single Line Comment Tests", () => {
   })
 
   test("Add when cursor is at end", async () => {
-    const [editor, result] = await loadFile("singleAddCursorBefore.js")
+    const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 13)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
 
@@ -90,7 +90,7 @@ suite("Single Line Comment Tests", () => {
   })
 
   test("Add when cursor is before first non-whitespace", async () => {
-    const [editor, result] = await loadFile("singleAddCursorBefore.js")
+    const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 1)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
 

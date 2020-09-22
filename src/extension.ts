@@ -1,5 +1,7 @@
 import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 
+const DEBUG = false
+
 // regexes
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
@@ -11,6 +13,12 @@ const JSDOC_LINE_CHAR = /\s\*\s/
  */
 const throwMissingEditor = () => {
   throw new Error("no vscode active editor")
+}
+
+export const log = (...messages: unknown[]): void => {
+  if (DEBUG) {
+    console.log(messages)
+  }
 }
 
 /**
@@ -66,7 +74,7 @@ export const getContentEndPos = (
   )?.range.end ?? throwMissingEditor()
 
 /**
- * primary extension action, deletes the JSDoc tags on selected lines if present or adds
+ * primary extension action, removes the JSDoc tags on selected lines if present or inserts
  * a JSDoc wrapping the selected lines of text comment
  */
 export const toggleJSDocComment = async (): Promise<void> => {
@@ -76,9 +84,12 @@ export const toggleJSDocComment = async (): Promise<void> => {
   let lineFirst = editor.document.lineAt(editor.selection.start.line)
   let lineLast = editor.document.lineAt(editor.selection.end.line)
 
+  const isSingleLineComment = lineFirst.lineNumber === lineLast.lineNumber
+
   let jsdocStart = lineFirst.text.match(JSDOC_START_TAG)
   let jsdocEnd = lineLast.text.match(JSDOC_END_TAG)
 
+  // fix multiline selection when open or close tag no selected
   // use start tag on prev line if it exists
   if (!jsdocStart) {
     const lineBefore = getPrevLine(lineFirst)
@@ -99,12 +110,12 @@ export const toggleJSDocComment = async (): Promise<void> => {
     }
   }
 
-  // #region - rm jsdoc tags (preserves comment body)
+  // #region - remove jsdoc tags (preserves comment body)
   await editor.edit((editBuilder) => {
     if (!jsdocStart?.index || !jsdocEnd?.index) return
 
-    // single line comment, no selection & selection
-    if (lineFirst.lineNumber === lineLast.lineNumber) {
+    // remove single line comment, no selection & selection
+    if (isSingleLineComment) {
       editBuilder.delete(
         new vscode.Range(
           lineFirst.lineNumber,
@@ -125,7 +136,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
       return
     }
 
-    // multi line comment
+    // remove multi line comment
     // open & close tags (first and last line)
     editBuilder.delete(lineFirst.rangeIncludingLineBreak)
     editBuilder.delete(lineLast.rangeIncludingLineBreak)
@@ -151,13 +162,17 @@ export const toggleJSDocComment = async (): Promise<void> => {
     }
   })
 
-  // handled removing jsdoc, job done
-  if (jsdocStart && jsdocEnd) return
+  // handled removing existing jsdoc, job done
+  if (jsdocStart && jsdocEnd) {
+    return
+    // TODO: rarely need to move cursor during multiline deletion
+    // if (!isSingleLineComment && wasRemoveSuccessful) {}
+  }
 
-  // #region - add jsdoc tags
+  // #region - insert jsdoc tags, none already exists
   const wasInsertSuccessful = await editor.edit((editBuilder) => {
-    // single line comment
-    if (lineFirst.lineNumber === lineLast.lineNumber) {
+    // insert single line comment
+    if (isSingleLineComment) {
       if (hasSelection(editor)) {
         editBuilder.insert(editor.selection.start, "/** ")
         editBuilder.insert(editor.selection.end, " */")
@@ -170,7 +185,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
       return
     }
 
-    // multi line comment
+    // insert multi line comment
     // target all lines between opening tag exclusive and closing tag inclusive
     for (let i = lineFirst.lineNumber + 1; i <= lineLast.lineNumber; i += 1) {
       editBuilder.insert(getContentStartPos(i), " * ")
@@ -184,14 +199,14 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
   // if cursor was at end of last line, the comment tag is errantly placed
   // before the cursor. this moves the comment tag after the cursor, keeping the
-  // cursor in the original position before the JSDoc was added
+  // cursor in the original position before the JSDoc was inserted
   // vscode doesn't have the ability to add to line index greater than max
   // #region - fix cursor / selection pos
   if (!wasInsertSuccessful) return
   const cursorPos = editor.selection.active
 
-  // single line comment
-  if (lineFirst.lineNumber === lineLast.lineNumber) {
+  // adjust single line comment cursor
+  if (isSingleLineComment) {
     if (hasSelection(editor)) {
       // any selection
       const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
@@ -215,7 +230,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
     //  no adjustment needed
     // }
   } else {
-    // multiline comment
+    // adjust multiline comment cursor
     // selection ends at end of line
     if (
       editor.selection.end.isAfterOrEqual(

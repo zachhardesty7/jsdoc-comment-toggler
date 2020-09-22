@@ -2,9 +2,11 @@ import * as path from "path"
 import * as Mocha from "mocha"
 import * as glob from "glob"
 
+import "source-map-support/register"
+
 export const run = (
   testsRoot: string,
-  cb: (error: any, failures?: number) => void
+  cb: (error: Error | null, failures?: number) => void
 ): void => {
   // Create the mocha test
   const mocha = new Mocha({

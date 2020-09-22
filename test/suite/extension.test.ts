@@ -189,11 +189,14 @@ describe("Multi Line Comment Tests", () => {
     assertEditorTextEquals(editor, result)
 
     // verify cursor & selection positions
-    assertEditorCursorEquals(editor, activePrePos.translate(0, -2))
-    assertEditorAnchorEquals(editor, getContentEndPos(2))
+    assertEditorCursorEquals(editor, activePrePos.with({ character: 0 }))
+    assertEditorAnchorEquals(
+      editor,
+      anchorPrePos.translate(-1).with({ character: 0 })
+    )
   })
 
-  it("Removes when both of the start and end tags' lines are not selected", async () => {
+  it("Removes when neither of the start and end tags' lines are selected", async () => {
     const [editor, result] = await loadFile("multiRemove.js")
     const activePrePos = new vscode.Position(2, 8)
     const anchorPrePos = new vscode.Position(3, 8)

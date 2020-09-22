@@ -59,7 +59,7 @@ const assertEditorTextEquals = (editor: vscode.TextEditor, target: string) => {
 describe("Single Line Comment Tests", () => {
   vscode.window.showInformationMessage("Start all Single Line tests.")
 
-  it("Adds when cursor in middle", async () => {
+  it("is added when cursor in middle", async () => {
     const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 3)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -73,7 +73,7 @@ describe("Single Line Comment Tests", () => {
     assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
   })
 
-  it("Adds when cursor is at end", async () => {
+  it("is added when cursor is at end", async () => {
     const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 13)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -87,7 +87,7 @@ describe("Single Line Comment Tests", () => {
     assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
   })
 
-  it("Adds when cursor is before first non-whitespace", async () => {
+  it("is added when cursor is before first non-whitespace", async () => {
     const [editor, result] = await loadFile("singleAdd.js")
     const cursorPrePos = new vscode.Position(1, 1)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -101,21 +101,7 @@ describe("Single Line Comment Tests", () => {
     assertEditorAnchorEquals(editor, cursorPrePos)
   })
 
-  it("Removes", async () => {
-    const [editor, result] = await loadFile("singleRemove.js")
-    const cursorPrePos = new vscode.Position(1, 20)
-    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, cursorPrePos.translate(0, -7))
-    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, -7))
-  })
-
-  it("Removes", async () => {
+  it("is removed", async () => {
     const [editor, result] = await loadFile("singleRemove.js")
     const cursorPrePos = new vscode.Position(1, 20)
     editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
@@ -133,7 +119,7 @@ describe("Single Line Comment Tests", () => {
 describe("Multi Line Comment Tests", () => {
   vscode.window.showInformationMessage("Start all Multi Line tests.")
 
-  it("Adds", async () => {
+  it("is added", async () => {
     const [editor, result] = await loadFile("multiAdd.js")
     const activePrePos = new vscode.Position(1, 5)
     const anchorPrePos = new vscode.Position(2, 5)
@@ -148,7 +134,8 @@ describe("Multi Line Comment Tests", () => {
     assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
   })
 
-  it("Adds when selection is before first non-whitespace of line", async () => {
+  // REVIEW: not sure this makes sense
+  it("is added when selection is before first non-whitespace of line", async () => {
     const [editor, result] = await loadFile("multiAdd.js")
     const activePrePos = new vscode.Position(1, 1)
     const anchorPrePos = new vscode.Position(2, 5)
@@ -163,7 +150,7 @@ describe("Multi Line Comment Tests", () => {
     assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
   })
 
-  it("Adds when selection is at end", async () => {
+  it("is added when selection is at end", async () => {
     const [editor, result] = await loadFile("multiAdd.js")
     const activePrePos = new vscode.Position(1, 5)
     const anchorPrePos = getContentEndPos(2)
@@ -178,7 +165,7 @@ describe("Multi Line Comment Tests", () => {
     assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
   })
 
-  it("Removes when all lines, including open and close tags, are selected", async () => {
+  it("is removed when all lines, including open and close tags, are selected", async () => {
     const [editor, result] = await loadFile("multiRemove.js")
     const activePrePos = new vscode.Position(1, 4)
     const anchorPrePos = new vscode.Position(4, 4)
@@ -190,13 +177,10 @@ describe("Multi Line Comment Tests", () => {
 
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, activePrePos.with({ character: 0 }))
-    assertEditorAnchorEquals(
-      editor,
-      anchorPrePos.translate(-1).with({ character: 0 })
-    )
+    assertEditorAnchorEquals(editor, getContentEndPos(anchorPrePos.line - 2))
   })
 
-  it("Removes when neither of the start and end tags' lines are selected", async () => {
+  it("is removed when neither of the start and end tags' lines are selected", async () => {
     const [editor, result] = await loadFile("multiRemove.js")
     const activePrePos = new vscode.Position(2, 8)
     const anchorPrePos = new vscode.Position(3, 8)

@@ -205,7 +205,7 @@ describe("Multi Line Comment Tests", () => {
 
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, activePrePos.translate(-1, -3))
-    assertEditorAnchorEquals(editor, activePrePos.translate(-1, -3))
+    assertEditorAnchorEquals(editor, anchorPrePos.translate(-1, -3))
   })
 })
 

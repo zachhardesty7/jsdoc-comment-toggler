@@ -6,9 +6,7 @@ import * as fs from "fs"
 import * as assert from "assert"
 import * as path from "path"
 import * as vscode from "vscode"
-import { getContentEndPos, toggleJSDocComment } from "../../src/extension"
-
-const VERBOSE = true
+import { getContentEndPos, log, toggleJSDocComment } from "../../src/extension"
 
 const testsFolder = "../../../test/examples/"
 const resultsFolder = "../../../test/results/"
@@ -46,9 +44,9 @@ const assertEditorAnchorEquals = (
 }
 
 const assertEditorTextEquals = (editor: vscode.TextEditor, target: string) => {
-  if (VERBOSE && editor.document.getText() !== target) {
-    console.log("editor.document.getText()", editor.document.getText())
-    console.log("target", target)
+  if (editor.document.getText() !== target) {
+    log("editor.document.getText()", editor.document.getText())
+    log("target", target)
   }
 
   assert.strictEqual(
@@ -73,8 +71,6 @@ describe("Single Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, cursorPrePos.translate(0, 4))
     assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
   it("Adds when cursor is at end", async () => {
@@ -89,8 +85,6 @@ describe("Single Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, cursorPrePos.translate(0, 4))
     assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
   it("Adds when cursor is before first non-whitespace", async () => {
@@ -105,8 +99,6 @@ describe("Single Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, cursorPrePos)
     assertEditorAnchorEquals(editor, cursorPrePos)
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
   it("Removes", async () => {
@@ -121,8 +113,20 @@ describe("Single Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, cursorPrePos.translate(0, -7))
     assertEditorAnchorEquals(editor, cursorPrePos.translate(0, -7))
+  })
 
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+  it("Removes", async () => {
+    const [editor, result] = await loadFile("singleRemove.js")
+    const cursorPrePos = new vscode.Position(1, 20)
+    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
+
+    await toggleJSDocComment()
+
+    assertEditorTextEquals(editor, result)
+
+    // verify cursor & selection positions
+    assertEditorCursorEquals(editor, cursorPrePos.translate(0, -7))
+    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, -7))
   })
 })
 
@@ -142,8 +146,6 @@ describe("Multi Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, activePrePos.translate(1, 3))
     assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
   it("Adds when selection is before first non-whitespace of line", async () => {
@@ -159,8 +161,6 @@ describe("Multi Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, activePrePos.translate(1, 4))
     assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
   it("Adds when selection is at end", async () => {
@@ -176,8 +176,6 @@ describe("Multi Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, activePrePos.translate(1, 3))
     assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
   it("Removes when all lines, including open and close tags, are selected", async () => {
@@ -193,8 +191,6 @@ describe("Multi Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, activePrePos.translate(0, -2))
     assertEditorAnchorEquals(editor, getContentEndPos(2))
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 
   it("Removes when both of the start and end tags' lines are not selected", async () => {
@@ -210,8 +206,6 @@ describe("Multi Line Comment Tests", () => {
     // verify cursor & selection positions
     assertEditorCursorEquals(editor, activePrePos.translate(-1, -3))
     assertEditorAnchorEquals(editor, activePrePos.translate(-1, -3))
-
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
   })
 })
 
@@ -221,6 +215,8 @@ const getUri = (directory: string, fileName: string) =>
 const loadFile = async (
   fileName: string
 ): Promise<[vscode.TextEditor, string]> => {
+  await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+
   const testUri = getUri(testsFolder, fileName)
   const resultUri = getUri(resultsFolder, fileName)
 

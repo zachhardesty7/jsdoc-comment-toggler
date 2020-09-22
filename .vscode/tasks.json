@@ -10,6 +10,16 @@
       "isBackground": true,
       "presentation": {
         "reveal": "never"
+      }
+    },
+    {
+      "type": "shell",
+      "command": "yarn compile",
+      "label": "yarn compile",
+      "problemMatcher": "$tsc-watch",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never"
       },
       "group": {
         "kind": "build",
@@ -18,11 +28,21 @@
     },
     {
       "type": "shell",
-      "command": "yarn test",
-      "label": "test",
+      "command": "yarn watch",
+      "label": "yarn watch",
       "problemMatcher": "$tsc-watch",
-      "isBackground": false,
+      "isBackground": true,
       "presentation": {
+        "reveal": "never"
+      }
+    },
+    {
+      "type": "shell",
+      "command": "yarn test",
+      "label": "run mocha tests",
+      "problemMatcher": "$tsc-watch",
+      "presentation": {
+        "clear": true,
         "reveal": "always"
       },
       "group": {

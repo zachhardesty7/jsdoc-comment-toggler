@@ -6,214 +6,327 @@ import * as fs from "fs"
 import * as assert from "assert"
 import * as path from "path"
 import * as vscode from "vscode"
-import { getContentEndPos, log, toggleJSDocComment } from "../../src/extension"
+import { toggleJSDocComment } from "../../src/extension"
 
 const testsFolder = "../../../test/examples/"
 const resultsFolder = "../../../test/results/"
 
-const assertEditorCursorEquals = (
-  editor: vscode.TextEditor,
-  target: vscode.Position
-) => {
-  const cursorPos = editor.selection.active
-
-  assert.strictEqual(cursorPos.line, target.line, "cursor on incorrect line")
-  assert.strictEqual(
-    cursorPos.character,
-    target.character,
-    "cursor at incorrect pos"
-  )
+/** editor and predefined targets */
+interface Subjects {
+  editor?: vscode.TextEditor
+  /** predefined document body */
+  content?: string
+  /** predefined opposite end of selection */
+  anchor?: vscode.Position
+  /** predefined cursor position */
+  active?: vscode.Position
 }
-
-const assertEditorAnchorEquals = (
-  editor: vscode.TextEditor,
-  target: vscode.Position
-) => {
-  const anchorPos = editor.selection.anchor
-
-  assert.strictEqual(
-    anchorPos.line,
-    target.line,
-    "anchor (other end of selection) on incorrect line"
-  )
-  assert.strictEqual(
-    anchorPos.character,
-    target.character,
-    "anchor (other end of selection) at incorrect pos"
-  )
-}
-
-const assertEditorTextEquals = (editor: vscode.TextEditor, target: string) => {
-  if (editor.document.getText() !== target) {
-    log("editor.document.getText()", editor.document.getText())
-    log("target", target)
-  }
-
-  assert.strictEqual(
-    editor.document.getText(),
-    target,
-    "incorrect textual content"
-  )
-}
-
-describe("Single Line Comment Tests", () => {
-  vscode.window.showInformationMessage("Start all Single Line tests.")
-
-  it("is added when cursor in middle", async () => {
-    const [editor, result] = await loadFile("singleAdd.js")
-    const cursorPrePos = new vscode.Position(1, 3)
-    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, cursorPrePos.translate(0, 4))
-    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
-  })
-
-  it("is added when cursor is at end", async () => {
-    const [editor, result] = await loadFile("singleAdd.js")
-    const cursorPrePos = new vscode.Position(1, 13)
-    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, cursorPrePos.translate(0, 4))
-    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, 4))
-  })
-
-  it("is added when cursor is before first non-whitespace", async () => {
-    const [editor, result] = await loadFile("singleAdd.js")
-    const cursorPrePos = new vscode.Position(1, 1)
-    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, cursorPrePos)
-    assertEditorAnchorEquals(editor, cursorPrePos)
-  })
-
-  it("is removed", async () => {
-    const [editor, result] = await loadFile("singleRemove.js")
-    const cursorPrePos = new vscode.Position(1, 20)
-    editor.selection = new vscode.Selection(cursorPrePos, cursorPrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, cursorPrePos.translate(0, -7))
-    assertEditorAnchorEquals(editor, cursorPrePos.translate(0, -7))
-  })
-})
-
-describe("Multi Line Comment Tests", () => {
-  vscode.window.showInformationMessage("Start all Multi Line tests.")
-
-  it("is added", async () => {
-    const [editor, result] = await loadFile("multiAdd.js")
-    const activePrePos = new vscode.Position(1, 5)
-    const anchorPrePos = new vscode.Position(2, 5)
-    editor.selection = new vscode.Selection(anchorPrePos, activePrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, activePrePos.translate(1, 3))
-    assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
-  })
-
-  // REVIEW: not sure this makes sense
-  it("is added when selection is before first non-whitespace of line", async () => {
-    const [editor, result] = await loadFile("multiAdd.js")
-    const activePrePos = new vscode.Position(1, 1)
-    const anchorPrePos = new vscode.Position(2, 5)
-    editor.selection = new vscode.Selection(anchorPrePos, activePrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, activePrePos.translate(1, 4))
-    assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
-  })
-
-  it("is added when selection is at end", async () => {
-    const [editor, result] = await loadFile("multiAdd.js")
-    const activePrePos = new vscode.Position(1, 5)
-    const anchorPrePos = getContentEndPos(2)
-    editor.selection = new vscode.Selection(anchorPrePos, activePrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, activePrePos.translate(1, 3))
-    assertEditorAnchorEquals(editor, anchorPrePos.translate(1, 3))
-  })
-
-  it("is removed when all lines, including open and close tags, are selected", async () => {
-    const [editor, result] = await loadFile("multiRemove.js")
-    const activePrePos = new vscode.Position(1, 4)
-    const anchorPrePos = new vscode.Position(4, 4)
-    editor.selection = new vscode.Selection(anchorPrePos, activePrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, activePrePos.with({ character: 0 }))
-    assertEditorAnchorEquals(editor, getContentEndPos(anchorPrePos.line - 2))
-  })
-
-  it("is removed when neither of the start and end tags' lines are selected", async () => {
-    const [editor, result] = await loadFile("multiRemove.js")
-    const activePrePos = new vscode.Position(2, 8)
-    const anchorPrePos = new vscode.Position(3, 8)
-    editor.selection = new vscode.Selection(anchorPrePos, activePrePos)
-
-    await toggleJSDocComment()
-
-    assertEditorTextEquals(editor, result)
-
-    // verify cursor & selection positions
-    assertEditorCursorEquals(editor, activePrePos.translate(-1, -3))
-    assertEditorAnchorEquals(editor, anchorPrePos.translate(-1, -3))
-  })
-})
-
-const getUri = (directory: string, fileName: string) =>
-  path.join(__dirname, directory, fileName)
 
 const loadFile = async (
   fileName: string
-): Promise<[vscode.TextEditor, string]> => {
+): Promise<{ editor: vscode.TextEditor; content: string }> => {
   await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
 
-  const testUri = getUri(testsFolder, fileName)
-  const resultUri = getUri(resultsFolder, fileName)
+  const testUri = path.join(__dirname, testsFolder, fileName)
+  const contentUri = path.join(__dirname, resultsFolder, fileName)
 
-  const result = fs.readFileSync(resultUri, { encoding: "utf-8" })
+  const content = fs.readFileSync(contentUri, { encoding: "utf-8" })
 
   const document = await vscode.workspace.openTextDocument(
     vscode.Uri.file(testUri)
   )
   const editor = await vscode.window.showTextDocument(document)
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  await new Promise((resolve) => setTimeout(resolve, 700))
 
-  return [editor, result]
+  return { editor, content }
 }
+
+const assertEditorCursorEquals = (subjects: Subjects) => {
+  it("has cursor at correct position", async () => {
+    const { editor, active } = subjects
+    if (!editor || !active) throw new Error("editor or target missing")
+
+    assert.deepStrictEqual(
+      editor.selection.active,
+      active,
+      "cursor (active end of selection) not in expected position"
+    )
+  })
+}
+
+const assertEditorAnchorEquals = (subjects: Subjects) => {
+  it("has anchor at correct position", async () => {
+    const { editor, anchor } = subjects
+    if (!editor || !anchor) throw new Error("editor or target missing")
+
+    assert.deepStrictEqual(
+      editor.selection.anchor,
+      anchor,
+      "anchor (other end of selection) not in expected position"
+    )
+  })
+}
+
+const itHasTargetText = (subjects: Subjects) => {
+  it("has toggled JSDoc comment chars", async () => {
+    const { editor, content } = subjects
+    if (!editor || !content) throw new Error("editor or target missing")
+
+    assert.strictEqual(
+      editor.document.getText(),
+      content,
+      "incorrect textual content"
+    )
+  })
+}
+
+// #region - single line tests
+describe("single line jsdoc comment", () => {
+  describe("add", () => {
+    describe("cursor in middle", () => {
+      const cursorPrePos = new vscode.Position(1, 3)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos.translate(0, 4),
+        active: cursorPrePos.translate(0, 4),
+      }
+
+      before(async () => {
+        const data = await loadFile("singleAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+
+    describe("cursor is at end", () => {
+      const cursorPrePos = new vscode.Position(1, 13)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos.translate(0, 4),
+        active: cursorPrePos.translate(0, 4),
+      }
+
+      before(async () => {
+        const data = await loadFile("singleAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+
+    describe("cursor is before first non-whitespace", () => {
+      const cursorPrePos = new vscode.Position(1, 1)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos,
+        active: cursorPrePos,
+      }
+
+      before(async () => {
+        const data = await loadFile("singleAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+  })
+
+  describe("remove", () => {
+    describe("cursor anywhere", () => {
+      const cursorPrePos = new vscode.Position(1, 20)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos.translate(0, -7),
+        active: cursorPrePos.translate(0, -7),
+      }
+
+      before(async () => {
+        const data = await loadFile("singleRemove.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+  })
+})
+
+// #region - multiline comments
+describe("multi line jsdoc comment", () => {
+  describe("add", () => {
+    describe("selection not before or at end (internal)", () => {
+      const activePrePos = new vscode.Position(1, 5)
+      const anchorPrePos = new vscode.Position(2, 5)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(1, 3),
+        active: activePrePos.translate(1, 3),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+
+    // REVIEW: not sure this makes sense
+    describe("selection is before first non-whitespace char", () => {
+      const activePrePos = new vscode.Position(1, 1)
+      const anchorPrePos = new vscode.Position(2, 5)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(1, 3),
+        active: activePrePos.translate(1, 4),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+
+    describe("selection is at end", () => {
+      const activePrePos = new vscode.Position(1, 5)
+      const anchorPrePos = new vscode.Position(2, 13)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(1, 3),
+        active: activePrePos.translate(1, 3),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+  })
+
+  describe("remove", () => {
+    describe("all lines, including open and close tags, are selected", () => {
+      const activePrePos = new vscode.Position(1, 4)
+      const anchorPrePos = new vscode.Position(4, 4)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(-2).with({ character: 13 }),
+        active: activePrePos.with({ character: 0 }),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiRemove.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+
+    describe("neither the start nor end tags' lines are within selection", () => {
+      const activePrePos = new vscode.Position(2, 8)
+      const anchorPrePos = new vscode.Position(3, 8)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(-1, -3),
+        active: activePrePos.translate(-1, -3),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiRemove.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+
+    // TODO: single line multi line block comment
+    describe("no selection & cursor is anywhere within", () => {
+      const cursorPrePos = new vscode.Position(2, 8)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos.translate(-1, -3),
+        active: cursorPrePos.translate(-1, -3),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorEquals(subjects)
+      assertEditorAnchorEquals(subjects)
+    })
+  })
+})

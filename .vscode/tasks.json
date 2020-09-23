@@ -33,15 +33,16 @@
       "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {
+        "panel": "dedicated",
         "reveal": "never"
       }
     },
     {
       "type": "shell",
       "command": "yarn test",
-      "label": "run mocha tests",
-      "problemMatcher": "$tsc-watch",
+      "label": "yarn: run mocha tests",
       "presentation": {
+        "panel": "dedicated",
         "clear": true,
         "reveal": "always"
       },

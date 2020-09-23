@@ -111,10 +111,11 @@ export const toggleJSDocComment = async (): Promise<void> => {
   }
 
   // #region - remove jsdoc tags (preserves comment body)
+  // const wasRemoveSuccessful =
   await editor.edit((editBuilder) => {
     if (!jsdocStart?.index || !jsdocEnd?.index) return
 
-    // remove single line comment, no selection & selection
+    // remove single line comment, no selection or selection
     if (isSingleLineComment) {
       editBuilder.delete(
         new vscode.Range(
@@ -166,7 +167,8 @@ export const toggleJSDocComment = async (): Promise<void> => {
   if (jsdocStart && jsdocEnd) {
     return
     // TODO: rarely need to move cursor during multiline deletion
-    // if (!isSingleLineComment && wasRemoveSuccessful) {}
+    // if (!isSingleLineComment && wasRemoveSuccessful) {
+    // }
   }
 
   // #region - insert jsdoc tags, none already exists

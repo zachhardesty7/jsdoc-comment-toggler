@@ -117,13 +117,14 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
     // remove single line comment, no selection or selection
     if (isSingleLineComment) {
-      editBuilder.delete(
+      editBuilder.replace(
         new vscode.Range(
           lineFirst.lineNumber,
           jsdocStart.index,
           lineFirst.lineNumber,
           jsdocStart.index + jsdocStart[0].length
-        )
+        ),
+        "// "
       )
       editBuilder.delete(
         new vscode.Range(
@@ -152,13 +153,14 @@ export const toggleJSDocComment = async (): Promise<void> => {
       const jsdocComment = line.text.match(JSDOC_LINE_CHAR)
 
       if (jsdocComment?.index)
-        editBuilder.delete(
+        editBuilder.replace(
           new vscode.Range(
             line.lineNumber,
             jsdocComment.index,
             line.lineNumber,
             jsdocComment.index + 3
-          )
+          ),
+          "// "
         )
     }
   })

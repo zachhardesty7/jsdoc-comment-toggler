@@ -41,28 +41,22 @@ const loadFile = async (
   return { editor, content }
 }
 
-const assertEditorCursorEquals = (subjects: Subjects) => {
-  it("has cursor at correct position", async () => {
-    const { editor, active } = subjects
-    if (!editor || !active) throw new Error("editor or target missing")
+const assertEditorCursorSelectionEquals = (subjects: Subjects) => {
+  it("has cursor & selection at correct position", async () => {
+    const { editor, active, anchor } = subjects
+    if (!editor || !active || !anchor)
+      throw new Error("editor or target missing")
 
     assert.deepStrictEqual(
-      editor.selection.active,
-      active,
-      "cursor (active end of selection) not in expected position"
-    )
-  })
-}
-
-const assertEditorAnchorEquals = (subjects: Subjects) => {
-  it("has anchor at correct position", async () => {
-    const { editor, anchor } = subjects
-    if (!editor || !anchor) throw new Error("editor or target missing")
-
-    assert.deepStrictEqual(
-      editor.selection.anchor,
-      anchor,
-      "anchor (other end of selection) not in expected position"
+      {
+        active: editor.selection.active,
+        anchor: editor.selection.anchor,
+      },
+      {
+        active,
+        anchor,
+      },
+      "cursor and/or selection not in expected position"
     )
   })
 }
@@ -102,8 +96,7 @@ describe("single line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
 
     describe("cursor is at end", () => {
@@ -125,8 +118,7 @@ describe("single line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
 
     describe("cursor is before first non-whitespace", () => {
@@ -148,8 +140,7 @@ describe("single line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
   })
 
@@ -158,8 +149,8 @@ describe("single line jsdoc comment", () => {
       const cursorPrePos = new vscode.Position(1, 20)
 
       const subjects: Subjects = {
-        anchor: cursorPrePos.translate(0, -7),
-        active: cursorPrePos.translate(0, -7),
+        anchor: cursorPrePos.translate(0, -4),
+        active: cursorPrePos.translate(0, -4),
       }
 
       before(async () => {
@@ -173,8 +164,7 @@ describe("single line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
   })
 })
@@ -183,8 +173,8 @@ describe("single line jsdoc comment", () => {
 describe("multi line jsdoc comment", () => {
   describe("add", () => {
     describe("selection not before or at end (internal)", () => {
-      const activePrePos = new vscode.Position(1, 5)
       const anchorPrePos = new vscode.Position(2, 5)
+      const activePrePos = new vscode.Position(1, 5)
 
       const subjects: Subjects = {
         anchor: anchorPrePos.translate(1, 3),
@@ -202,8 +192,7 @@ describe("multi line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
 
     // REVIEW: not sure this makes sense
@@ -227,13 +216,12 @@ describe("multi line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
 
     describe("selection is at end", () => {
-      const activePrePos = new vscode.Position(1, 5)
       const anchorPrePos = new vscode.Position(2, 13)
+      const activePrePos = new vscode.Position(1, 5)
 
       const subjects: Subjects = {
         anchor: anchorPrePos.translate(1, 3),
@@ -251,15 +239,14 @@ describe("multi line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
   })
 
   describe("remove", () => {
     describe("all lines, including open and close tags, are selected", () => {
-      const activePrePos = new vscode.Position(1, 4)
       const anchorPrePos = new vscode.Position(4, 4)
+      const activePrePos = new vscode.Position(1, 4)
 
       const subjects: Subjects = {
         anchor: anchorPrePos.translate(-2).with({ character: 13 }),
@@ -277,17 +264,16 @@ describe("multi line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
 
     describe("neither the start nor end tags' lines are within selection", () => {
-      const activePrePos = new vscode.Position(2, 8)
       const anchorPrePos = new vscode.Position(3, 8)
+      const activePrePos = new vscode.Position(2, 8)
 
       const subjects: Subjects = {
-        anchor: anchorPrePos.translate(-1, -3),
-        active: activePrePos.translate(-1, -3),
+        anchor: anchorPrePos.translate(-1, 0),
+        active: activePrePos.translate(-1, 0),
       }
 
       before(async () => {
@@ -301,8 +287,7 @@ describe("multi line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
 
     // TODO: single line multi line block comment
@@ -325,8 +310,7 @@ describe("multi line jsdoc comment", () => {
 
       itHasTargetText(subjects)
 
-      assertEditorCursorEquals(subjects)
-      assertEditorAnchorEquals(subjects)
+      assertEditorCursorSelectionEquals(subjects)
     })
   })
 })

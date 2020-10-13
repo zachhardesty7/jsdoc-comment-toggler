@@ -36,8 +36,8 @@ export const run = (
       vscode.Uri.file(scratchpadUri)
     )
     await vscode.window.showTextDocument(document)
-    // editor isn't immediately available when promise fulfills
-    await new Promise((resolve) => setTimeout(resolve, 700))
+    // editor isn't immediately available when `showTextDocument` promise fulfills
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     // Add files to the test suite
     files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)))

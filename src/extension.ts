@@ -3,6 +3,7 @@ import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 const DEBUG = false
 
 // regexes
+const COMMENT_START_TAG = /\/\/\s?/
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
 const JSDOC_LINE_CHAR = /\s\*\s/
@@ -167,13 +168,14 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
   // handled removing existing jsdoc, job done
   if (jsdocStart && jsdocEnd) {
+    // console.log("editor.selection", editor.selection)
     return
     // TODO: rarely need to move cursor during multiline deletion
     // if (!isSingleLineComment && wasRemoveSuccessful) {
     // }
   }
 
-  // #region - insert jsdoc tags, none already exists
+  // #region - insert jsdoc tags, none already exist
   const wasInsertSuccessful = await editor.edit((editBuilder) => {
     // insert single line comment
     if (isSingleLineComment) {
@@ -182,7 +184,22 @@ export const toggleJSDocComment = async (): Promise<void> => {
         editBuilder.insert(editor.selection.end, " */")
       } else {
         // no selection
-        editBuilder.insert(getContentStartPos(lineFirst), "/** ")
+        const contentStart = lineFirst.text.slice(
+          lineFirst.firstNonWhitespaceCharacterIndex
+        )
+        const commentTag = contentStart.match(COMMENT_START_TAG)
+        if (commentTag)
+          editBuilder.replace(
+            new vscode.Range(
+              lineFirst.lineNumber,
+              lineFirst.firstNonWhitespaceCharacterIndex,
+              lineFirst.lineNumber,
+              lineFirst.firstNonWhitespaceCharacterIndex + commentTag[0].length
+            ),
+            "/** "
+          )
+        else editBuilder.insert(getContentStartPos(lineFirst), "/** ")
+
         editBuilder.insert(getContentEndPos(lineLast), " */")
       }
 
@@ -190,14 +207,31 @@ export const toggleJSDocComment = async (): Promise<void> => {
     }
 
     // insert multi line comment
+    const indentation = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
+    editBuilder.insert(getContentStartPos(lineFirst), `/**\n${indentation}`)
     // target all lines between opening tag exclusive and closing tag inclusive
-    for (let i = lineFirst.lineNumber + 1; i <= lineLast.lineNumber; i += 1) {
-      editBuilder.insert(getContentStartPos(i), " * ")
+    for (let i = lineFirst.lineNumber; i <= lineLast.lineNumber; i += 1) {
+      const line = vscode?.window?.activeTextEditor?.document.lineAt(i)
+      console.log("line", line)
+      // eslint-disable-next-line no-continue
+      if (!line) continue
+      const contentStart = line.text.slice(
+        line.firstNonWhitespaceCharacterIndex
+      )
+      const commentTag = contentStart.match(COMMENT_START_TAG)
+      if (commentTag)
+        editBuilder.replace(
+          new vscode.Range(
+            line.lineNumber,
+            line.firstNonWhitespaceCharacterIndex,
+            line.lineNumber,
+            line.firstNonWhitespaceCharacterIndex + commentTag[0].length
+          ),
+          " * "
+        )
+      else editBuilder.insert(getContentStartPos(line), " * ")
     }
 
-    const indentation = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
-
-    editBuilder.insert(getContentStartPos(lineFirst), `/**\n${indentation} * `)
     editBuilder.insert(getContentEndPos(lineLast), `\n${indentation} */`)
   })
 

@@ -342,7 +342,7 @@ describe("multi line jsdoc comment", () => {
 
       const subjects: Subjects = {
         anchor: anchorPrePos.translate(1, 0),
-        active: activePrePos.translate(1, 0),
+        active: new vscode.Position(2, 5), // FIXME: hardcoded
       }
 
       before(async () => {
@@ -385,8 +385,8 @@ describe("multi line jsdoc comment", () => {
 
   describe("remove", () => {
     describe("all lines, including open and close tags, are selected", () => {
-      const anchorPrePos = new vscode.Position(4, 4)
-      const activePrePos = new vscode.Position(1, 4)
+      const anchorPrePos = new vscode.Position(4, 5)
+      const activePrePos = new vscode.Position(1, 2)
 
       const subjects: Subjects = {
         anchor: anchorPrePos.translate(-2).with({ character: 13 }),

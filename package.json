@@ -2,7 +2,7 @@
   "name": "jsdoc-comment-toggler",
   "displayName": "jsdoc comment toggler",
   "description": "Toggle JSDoc comment on line or selection",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "eslintConfig": {
     "root": true,
     "parser": "@typescript-eslint/parser",
@@ -83,6 +83,7 @@
     "prettier": "^2.1.2",
     "source-map-support": "^0.5.19",
     "typescript": "^4.0.3",
+    "vsce": "^1.81.1",
     "vscode-test": "^1.4.0"
   }
 }

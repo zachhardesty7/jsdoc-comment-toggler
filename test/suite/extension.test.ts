@@ -144,6 +144,74 @@ describe("single line jsdoc comment", () => {
     })
   })
 
+  describe("convert", () => {
+    describe("cursor in middle", () => {
+      const cursorPrePos = new vscode.Position(1, 7)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos.translate(0, 1),
+        active: cursorPrePos.translate(0, 1),
+      }
+
+      before(async () => {
+        const data = await loadFile("singleConvert.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorSelectionEquals(subjects)
+    })
+
+    describe("cursor is at end", () => {
+      const cursorPrePos = new vscode.Position(1, 16)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos.translate(0, 1),
+        active: cursorPrePos.translate(0, 1),
+      }
+
+      before(async () => {
+        const data = await loadFile("singleConvert.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorSelectionEquals(subjects)
+    })
+
+    describe("cursor is before first non-whitespace", () => {
+      const cursorPrePos = new vscode.Position(1, 1)
+
+      const subjects: Subjects = {
+        anchor: cursorPrePos,
+        active: cursorPrePos,
+      }
+
+      before(async () => {
+        const data = await loadFile("singleConvert.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          cursorPrePos,
+          cursorPrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorSelectionEquals(subjects)
+    })
+  })
+
   describe("remove", () => {
     describe("cursor anywhere", () => {
       const cursorPrePos = new vscode.Position(1, 20)
@@ -230,6 +298,78 @@ describe("multi line jsdoc comment", () => {
 
       before(async () => {
         const data = await loadFile("multiAdd.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorSelectionEquals(subjects)
+    })
+  })
+
+  describe("convert", () => {
+    describe("selection not before or at end (internal)", () => {
+      const anchorPrePos = new vscode.Position(2, 9)
+      const activePrePos = new vscode.Position(1, 9)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(1, 0),
+        active: activePrePos.translate(1, 0),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiConvert.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorSelectionEquals(subjects)
+    })
+
+    // REVIEW: not sure this makes sense
+    describe("selection is before first non-whitespace char", () => {
+      const activePrePos = new vscode.Position(1, 1)
+      const anchorPrePos = new vscode.Position(2, 9)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(1, 0),
+        active: activePrePos.translate(1, 0),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiConvert.js")
+        Object.assign(subjects, data).editor.selection = new vscode.Selection(
+          anchorPrePos,
+          activePrePos
+        )
+        await toggleJSDocComment()
+      })
+
+      itHasTargetText(subjects)
+
+      assertEditorCursorSelectionEquals(subjects)
+    })
+
+    describe("selection is at end", () => {
+      const anchorPrePos = new vscode.Position(2, 16)
+      const activePrePos = new vscode.Position(1, 9)
+
+      const subjects: Subjects = {
+        anchor: anchorPrePos.translate(1, 0),
+        active: activePrePos.translate(1, 0),
+      }
+
+      before(async () => {
+        const data = await loadFile("multiConvert.js")
         Object.assign(subjects, data).editor.selection = new vscode.Selection(
           anchorPrePos,
           activePrePos

@@ -25,20 +25,35 @@ interface Subjects {
 const loadFile = async (
   fileName: string
 ): Promise<{ editor: vscode.TextEditor; content: string }> => {
-  await vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+  const startingContentUri = path.join(__dirname, testsFolder, fileName)
+  const targetContentUri = path.join(__dirname, resultsFolder, fileName)
 
-  const testUri = path.join(__dirname, testsFolder, fileName)
-  const contentUri = path.join(__dirname, resultsFolder, fileName)
+  const startingContent = fs.readFileSync(startingContentUri, "utf-8")
+  const targetContent = fs.readFileSync(targetContentUri, "utf-8")
 
-  const content = fs.readFileSync(contentUri, { encoding: "utf-8" })
+  const editor = vscode.window.activeTextEditor
+  if (!editor) throw new Error("editor missing")
 
-  const document = await vscode.workspace.openTextDocument(
-    vscode.Uri.file(testUri)
-  )
-  const editor = await vscode.window.showTextDocument(document)
-  await new Promise((resolve) => setTimeout(resolve, 700))
+  // set document text to starting content of test
+  const lineLast = editor.document.lineAt(editor.document.lineCount - 1)
+  await editor.edit((editBuilder) => {
+    editBuilder.replace(
+      new vscode.Range(0, 0, lineLast.lineNumber, lineLast.range.end.character),
+      startingContent
+    )
+  })
 
-  return { editor, content }
+  // normalize to UNIX line endings (`\n`)
+  const doc = vscode.window.activeTextEditor?.document.getText()
+  if (JSON.stringify(doc).includes("\\r\\n"))
+    await editor.edit((editBuilder) => {
+      editBuilder.setEndOfLine(vscode.EndOfLine.LF)
+    })
+
+  // REVIEW: still need delay?
+  // await new Promise((resolve) => setTimeout(resolve, 20))
+
+  return { editor, content: targetContent }
 }
 
 const assertEditorCursorSelectionEquals = (subjects: Subjects) => {
@@ -62,7 +77,7 @@ const assertEditorCursorSelectionEquals = (subjects: Subjects) => {
 }
 
 const itHasTargetText = (subjects: Subjects) => {
-  it("has toggled JSDoc comment chars", async () => {
+  it("starts with proper comment tag chars", async () => {
     const { editor, content } = subjects
     if (!editor || !content) throw new Error("editor or target missing")
 
@@ -317,7 +332,7 @@ describe("multi line jsdoc comment", () => {
       const activePrePos = new vscode.Position(1, 9)
 
       const subjects: Subjects = {
-        anchor: anchorPrePos.translate(1, 0),
+        anchor: anchorPrePos.translate(1, 1),
         active: activePrePos.translate(1, 0),
       }
 
@@ -341,7 +356,7 @@ describe("multi line jsdoc comment", () => {
       const anchorPrePos = new vscode.Position(2, 9)
 
       const subjects: Subjects = {
-        anchor: anchorPrePos.translate(1, 0),
+        anchor: anchorPrePos.translate(1, 1),
         active: new vscode.Position(2, 5), // FIXME: hardcoded
       }
 

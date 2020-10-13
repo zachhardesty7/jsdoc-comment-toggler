@@ -1,4 +1,4 @@
 export const obj = {
   // foo: "bar",
-  // bar: "baz",
+  //bar: "baz",
 }

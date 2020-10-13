@@ -1,11 +1,14 @@
+/* eslint-disable import/no-unresolved, import/extensions */
+
 import * as path from "path"
-import { cyan, yellowBright } from "ansi-colors"
+import { cyan } from "ansi-colors"
 
 import { runTests } from "vscode-test"
+import { log } from "./utils"
 
 async function main() {
   try {
-    console.info(`${cyan("info")} Starting tests`)
+    log.info("Starting tests")
     // The folder containing the Extension Manifest package.json
     // Passed to `--extensionDevelopmentPath`
     const extensionDevelopmentPath = path.resolve(__dirname, "../")
@@ -19,7 +22,7 @@ async function main() {
     // Download VS Code, unzip it and run the integration test
     await runTests({ extensionDevelopmentPath, extensionTestsPath })
   } catch {
-    console.warn(`${yellowBright("warn")} Some tests failed`)
+    log.warn(`Some tests failed`)
   } finally {
     console.timeEnd(`${cyan("info")} Time to complete all tests`)
   }

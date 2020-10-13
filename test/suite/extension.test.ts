@@ -1,5 +1,4 @@
-/* eslint-disable import/no-unresolved */
-/* eslint-disable import/extensions */
+/* eslint-disable import/no-unresolved, import/extensions */
 /* global describe, it */
 
 import * as fs from "fs"

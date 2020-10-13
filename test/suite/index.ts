@@ -1,10 +1,11 @@
-/* eslint-disable import/no-unresolved */
+/* eslint-disable import/no-unresolved, import/extensions */
 
 import * as path from "path"
 import * as Mocha from "mocha"
 import * as glob from "glob"
 import * as vscode from "vscode"
-import { cyan, red } from "ansi-colors"
+import { cyan } from "ansi-colors"
+import { log } from "../utils"
 
 import "source-map-support/register"
 
@@ -25,7 +26,7 @@ export const run = (
 
   glob("**/**.test.js", { cwd: testsRoot }, async (err, files) => {
     if (err) {
-      console.error(`${red("error")} glob err`, err)
+      log.error("glob err", err)
       return cb(err)
     }
 
@@ -49,7 +50,7 @@ export const run = (
         cb(null, failures)
       })
     } catch (error) {
-      console.error(error)
+      log.error(error)
       return cb(error)
     }
   })

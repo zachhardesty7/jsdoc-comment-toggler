@@ -1,3 +1,1 @@
-export const obj = {
-  foo: "bar",
-}
+export const foo = varNeedingToBeTypeCast

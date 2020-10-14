@@ -92,7 +92,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
   // fix multiline selection when open or close tag no selected
   // use start tag on prev line if it exists
-  if (!jsdocStart) {
+  if (!jsdocStart && lineFirst.lineNumber !== 0) {
     const lineBefore = getPrevLine(lineFirst)
     const jsdocMatch = lineBefore.text.match(JSDOC_START_TAG)
     if (jsdocMatch) {
@@ -102,7 +102,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
   }
 
   // use end tag on prev line if it exists
-  if (!jsdocEnd) {
+  if (!jsdocEnd && lineLast.lineNumber !== editor.document.lineCount - 1) {
     const lineAfter = getNextLine(lineLast)
     const jsdocMatch = lineAfter.text.match(JSDOC_END_TAG)
     if (jsdocMatch) {

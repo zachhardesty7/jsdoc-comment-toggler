@@ -9,11 +9,18 @@ const JSDOC_END_TAG = /\s?\*\//
 const JSDOC_LINE_CHAR = /\s\*\s/
 
 /**
- * helper to yeet the entire extension when no editor, should **NOT** be possible to
- * ever trigger
+ * helper to guarantee the active editor is defined.
+ *
+ * guards against an invariant state by yeeting the entire extension when no editor
+ *
+ * should **NOT** be possible to ever trigger
+ *
+ * @returns currently visible editor, safely
  */
-const throwMissingEditor = () => {
-  throw new Error("no vscode active editor")
+export const getEditor = (): vscode.TextEditor => {
+  const editor = vscode.window.activeTextEditor
+  if (!editor) throw new Error("no active editor, make sure a file is open")
+  return editor
 }
 
 export const log = (...messages: unknown[]): void => {
@@ -27,18 +34,18 @@ export const log = (...messages: unknown[]): void => {
  * @returns the line directly proceeding the input
  */
 const getPrevLine = (line: vscode.TextLine | number): vscode.TextLine =>
-  vscode.window.activeTextEditor?.document.lineAt(
+  getEditor().document.lineAt(
     (typeof line !== "number" ? line.lineNumber : line) - 1
-  ) ?? throwMissingEditor()
+  )
 
 /**
  * @param line - input
  * @returns the line directly following the input
  */
 const getNextLine = (line: vscode.TextLine | number): vscode.TextLine =>
-  vscode.window.activeTextEditor?.document.lineAt(
+  getEditor().document.lineAt(
     (typeof line === "number" ? line : line.lineNumber) + 1
-  ) ?? throwMissingEditor()
+  )
 
 /**
  * @param editor - vscode's currently active text editor
@@ -52,15 +59,13 @@ const hasSelection = (editor: vscode.TextEditor): boolean =>
  * @returns position of first non-whitespace character on target line
  */
 const getContentStartPos = (line: vscode.TextLine | number): vscode.Position =>
-  !vscode.window.activeTextEditor
-    ? throwMissingEditor()
-    : new vscode.Position(
-        typeof line === "number" ? line : line.lineNumber,
-        (typeof line === "number"
-          ? vscode.window.activeTextEditor.document.lineAt(line)
-          : line
-        ).firstNonWhitespaceCharacterIndex
-      )
+  new vscode.Position(
+    typeof line === "number" ? line : line.lineNumber,
+    (typeof line === "number"
+      ? getEditor().document.lineAt(line)
+      : line
+    ).firstNonWhitespaceCharacterIndex
+  )
 
 /**
  * @param line - target
@@ -69,10 +74,8 @@ const getContentStartPos = (line: vscode.TextLine | number): vscode.Position =>
 export const getContentEndPos = (
   line: vscode.TextLine | number
 ): vscode.Position =>
-  (typeof line === "number"
-    ? vscode.window.activeTextEditor?.document.lineAt(line)
-    : line
-  )?.range.end ?? throwMissingEditor()
+  (typeof line === "number" ? getEditor().document.lineAt(line) : line).range
+    .end
 
 /**
  * primary extension action, removes the JSDoc tags on selected lines if present or inserts

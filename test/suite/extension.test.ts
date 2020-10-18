@@ -9,6 +9,7 @@ import * as assert from "assert"
 import * as path from "path"
 import * as vscode from "vscode"
 import * as Mocha from "mocha"
+// import { log } from "../utils"
 import { getEditor, toggleJSDocComment } from "../../src/extension"
 
 const testsFolder = "../../../test/examples/"
@@ -54,6 +55,19 @@ const loadFile = async (fileName: string): Promise<string> => {
   return targetContent
 }
 
+const itHasTargetText = (targets: Targets) => {
+  it("has the expected text output", () => {
+    const { content } = targets
+    if (!content) throw new ReferenceError("target output content not found")
+
+    assert.strictEqual(
+      getEditor().document.getText(),
+      content,
+      "output text incorrect"
+    )
+  })
+}
+
 const itHasCursorSelectionPosition = (targets: Targets) => {
   it("has cursor & selection at correct position", () => {
     const { anchor, active } = targets
@@ -72,19 +86,6 @@ const itHasCursorSelectionPosition = (targets: Targets) => {
         active,
       },
       "cursor and/or selection in incorrect position"
-    )
-  })
-}
-
-const itHasTargetText = (targets: Targets) => {
-  it("has the expected text output", () => {
-    const { content } = targets
-    if (!content) throw new ReferenceError("target output content not found")
-
-    assert.strictEqual(
-      getEditor().document.getText(),
-      content,
-      "output text incorrect"
     )
   })
 }

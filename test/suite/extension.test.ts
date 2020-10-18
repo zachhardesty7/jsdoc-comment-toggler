@@ -166,7 +166,7 @@ const itHasCorrectOutputAndCursorPosition = (
 // #region - single line tests
 describe("single line jsdoc comment", () => {
   // "add new comment op"
-  describe("adding new comment", () => {
+  describe.only("adding new comment", () => {
     describe("when NO selection", () => {
       describe(
         "when cursor is at start of line",

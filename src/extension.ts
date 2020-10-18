@@ -136,13 +136,12 @@ export const toggleJSDocComment = async (): Promise<void> => {
     }
   }
 
-  // #region - remove jsdoc tags (preserves comment body)
-  // const wasRemoveSuccessful =
+  // construct and trigger single batch of changes
   await editor.edit((editBuilder) => {
-    if (!jsdocStart?.index || !jsdocEnd?.index) return
+    // #region - remove jsdoc tags (preserves comment body)
 
     // remove single line comment, no selection or selection
-    if (isSingleLineComment) {
+    if (isSingleLineComment && jsdocStart?.index && jsdocEnd?.index) {
       editBuilder.replace(
         new vscode.Range(
           lineFirst.lineNumber,
@@ -165,43 +164,36 @@ export const toggleJSDocComment = async (): Promise<void> => {
     }
 
     // remove multi line comment
-    // open & close tags (first and last line)
-    editBuilder.delete(lineFirst.rangeIncludingLineBreak)
-    editBuilder.delete(lineLast.rangeIncludingLineBreak)
+    if (jsdocStart?.index && jsdocEnd?.index) {
+      // open & close tags (first and last line)
+      editBuilder.delete(lineFirst.rangeIncludingLineBreak)
+      editBuilder.delete(lineLast.rangeIncludingLineBreak)
 
-    // continuation comment line's *s
-    for (
-      let i = lineFirst.lineNumber + 1;
-      i <= lineLast.lineNumber - 1;
-      i += 1
-    ) {
-      const line = editor.document.lineAt(i)
-      const jsdocComment = line.text.match(JSDOC_LINE_CHAR)
+      // continuation comment line's *s
+      for (
+        let i = lineFirst.lineNumber + 1;
+        i <= lineLast.lineNumber - 1;
+        i += 1
+      ) {
+        const line = editor.document.lineAt(i)
+        const jsdocComment = line.text.match(JSDOC_LINE_CHAR)
 
-      if (jsdocComment?.index)
-        editBuilder.replace(
-          new vscode.Range(
-            line.lineNumber,
-            jsdocComment.index,
-            line.lineNumber,
-            jsdocComment.index + 3
-          ),
-          "// "
-        )
+        if (jsdocComment?.index)
+          editBuilder.replace(
+            new vscode.Range(
+              line.lineNumber,
+              jsdocComment.index,
+              line.lineNumber,
+              jsdocComment.index + 3
+            ),
+            "// "
+          )
+      }
+      // handled removing existing jsdoc, job done
+      return
     }
-  })
 
-  // handled removing existing jsdoc, job done
-  if (jsdocStart && jsdocEnd) {
-    // console.log("editor.selection", editor.selection)
-    return
-    // TODO: rarely need to move cursor during multiline deletion
-    // if (!isSingleLineComment && wasRemoveSuccessful) {
-    // }
-  }
-
-  // #region - insert jsdoc tags, none already exist
-  await editor.edit((editBuilder) => {
+    // #region - insert jsdoc tags, none already exist
     // insert single line comment
     if (isSingleLineComment) {
       if (hasSelection(editor)) {
@@ -290,11 +282,15 @@ export const toggleJSDocComment = async (): Promise<void> => {
   })
 }
 
-// if cursor was at end of last line, the comment tag is errantly placed
-// before the cursor. this moves the comment tag after the cursor, keeping the
-// cursor in the original position before the JSDoc was inserted
-// vscode doesn't have the ability to add to line index greater than max
 // #region - fix cursor / selection pos
+/**
+ * if cursor was at end of last line, the comment tag is errantly placed
+ * before the cursor. this moves the comment tag after the cursor, keeping the
+ * cursor in the original position before the JSDoc was inserted
+ * vscode doesn't have the ability to add to line index greater than max
+ *
+ * @param isSingleLineComment - precalculated
+ */
 const adjustCursorPos = (isSingleLineComment: boolean) => {
   const editor = getEditor()
   const cursorPos = editor.selection.active

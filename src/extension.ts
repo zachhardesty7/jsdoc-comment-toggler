@@ -1,6 +1,6 @@
 import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 
-const DEBUG = false
+const DEBUG = process.env.DEBUG_EXTENSION ?? false
 
 // regexes
 const COMMENT_START_TAG = /\/\/\s?/

@@ -4,7 +4,10 @@ import * as path from "path"
 import { cyan } from "ansi-colors"
 
 import { runTests } from "vscode-test"
+import { config } from "dotenv"
 import { log } from "./utils"
+
+config()
 
 async function main() {
   try {

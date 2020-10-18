@@ -21,6 +21,7 @@ async function main() {
 
     // Download VS Code, unzip it and run the integration test
     await runTests({ extensionDevelopmentPath, extensionTestsPath })
+    log.info("All tests passed!")
   } catch {
     log.warn(`Some tests failed`)
   } finally {

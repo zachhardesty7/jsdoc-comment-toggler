@@ -25,8 +25,31 @@ export const getEditor = (): vscode.TextEditor => {
 
 export const log = (...messages: unknown[]): void => {
   if (DEBUG) {
-    console.log(messages)
+    console.log(...messages)
   }
+}
+
+const setCursorSelection = (selection: vscode.Selection) => {
+  if (DEBUG) {
+    if (!getEditor().selection.active.isEqual(selection.active))
+      log(
+        `adjusting cursor: [${getEditor().selection.active.line}, ${
+          getEditor().selection.active.character
+        }] => [${selection.active.line}, ${selection.active.character}]`
+      )
+
+    if (
+      hasSelection(getEditor()) &&
+      !getEditor().selection.anchor.isEqual(selection.anchor)
+    )
+      log(
+        `adjusting anchor: [${getEditor().selection.anchor.line}, ${
+          getEditor().selection.anchor.character
+        }] => [${selection.anchor.line}, ${selection.anchor.character}]`
+      )
+  }
+
+  getEditor().selection = selection
 }
 
 /**
@@ -82,8 +105,7 @@ export const getContentEndPos = (
  * a JSDoc wrapping the selected lines of text comment
  */
 export const toggleJSDocComment = async (): Promise<void> => {
-  const editor = vscode.window.activeTextEditor
-  if (!editor) return
+  const editor = getEditor()
 
   let lineFirst = editor.document.lineAt(editor.selection.start.line)
   let lineLast = editor.document.lineAt(editor.selection.end.line)
@@ -93,7 +115,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
   let jsdocStart = lineFirst.text.match(JSDOC_START_TAG)
   let jsdocEnd = lineLast.text.match(JSDOC_END_TAG)
 
-  // fix multiline selection when open or close tag no selected
+  // fix multiline selection when open or close tag not selected
   // use start tag on prev line if it exists
   if (!jsdocStart && lineFirst.lineNumber !== 0) {
     const lineBefore = getPrevLine(lineFirst)
@@ -179,7 +201,7 @@ export const toggleJSDocComment = async (): Promise<void> => {
   }
 
   // #region - insert jsdoc tags, none already exist
-  const wasInsertSuccessful = await editor.edit((editBuilder) => {
+  await editor.edit((editBuilder) => {
     // insert single line comment
     if (isSingleLineComment) {
       if (hasSelection(editor)) {
@@ -201,9 +223,38 @@ export const toggleJSDocComment = async (): Promise<void> => {
             ),
             "/** "
           )
-        else editBuilder.insert(getContentStartPos(lineFirst), "/** ")
 
-        editBuilder.insert(getContentEndPos(lineLast), " */")
+        if (getEditor().selection.active.character > 0) {
+          const prevChar = getEditor().document.getText(
+            new vscode.Range(
+              getEditor().selection.active.translate(0, -1),
+              getEditor().selection.active
+            )
+          )
+
+          if (prevChar !== " ") {
+            editBuilder.insert(getEditor().selection.active, " ")
+          }
+        }
+
+        editBuilder.insert(getEditor().selection.active, "/** ")
+
+        const nextChar = getEditor().document.getText(
+          new vscode.Range(
+            getEditor().selection.active,
+            getEditor().selection.active.translate(0, 1)
+          )
+        )
+
+        editBuilder.replace(
+          new vscode.Range(
+            getEditor().selection.active,
+            getEditor().selection.active.translate(0, 1)
+          ),
+          ` */${nextChar && nextChar !== " " ? " " : ""}${nextChar}`
+        )
+
+        adjustCursorPos(isSingleLineComment)
       }
 
       return
@@ -237,33 +288,38 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
     editBuilder.insert(getContentEndPos(lineLast), `\n${indentation} */`)
   })
+}
 
-  // if cursor was at end of last line, the comment tag is errantly placed
-  // before the cursor. this moves the comment tag after the cursor, keeping the
-  // cursor in the original position before the JSDoc was inserted
-  // vscode doesn't have the ability to add to line index greater than max
-  // #region - fix cursor / selection pos
-  if (!wasInsertSuccessful) return
+// if cursor was at end of last line, the comment tag is errantly placed
+// before the cursor. this moves the comment tag after the cursor, keeping the
+// cursor in the original position before the JSDoc was inserted
+// vscode doesn't have the ability to add to line index greater than max
+// #region - fix cursor / selection pos
+const adjustCursorPos = (isSingleLineComment: boolean) => {
+  const editor = getEditor()
   const cursorPos = editor.selection.active
 
   // adjust single line comment cursor
   if (isSingleLineComment) {
-    if (hasSelection(editor)) {
+    if (cursorPos.isEqual(getContentEndPos(cursorPos.line))) {
+      // https://code.visualstudio.com/api/references/commands
+      vscode.commands.executeCommand("cursorMove", {
+        to: "left",
+        by: "character",
+        value: 3,
+        select: false,
+      })
+    } else if (hasSelection(editor)) {
       // any selection
       const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
 
       const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
-      editor.selection = new vscode.Selection(
-        isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
-        isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
-      )
-    } else if (cursorPos.isEqual(getContentEndPos(cursorPos.line))) {
-      // no selection, cursor at end of line
-      const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
 
-      editor.selection = new vscode.Selection(
-        adjustedSelectionEndPos,
-        adjustedSelectionEndPos
+      setCursorSelection(
+        new vscode.Selection(
+          isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
+          isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
+        )
       )
     }
     // else {
@@ -284,9 +340,12 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
       // ensure cursor is at original side of the selection
       const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
-      editor.selection = new vscode.Selection(
-        isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
-        isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
+
+      setCursorSelection(
+        new vscode.Selection(
+          isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
+          isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
+        )
       )
     }
 
@@ -302,19 +361,26 @@ export const toggleJSDocComment = async (): Promise<void> => {
 
       // ensure cursor is at same side of selection
       const isCursorAtStart = cursorPos.isEqual(editor.selection.start)
-      editor.selection = new vscode.Selection(
-        isCursorAtStart ? editor.selection.end : adjustedSelectionStartPos,
-        isCursorAtStart ? adjustedSelectionStartPos : editor.selection.end
+
+      setCursorSelection(
+        new vscode.Selection(
+          isCursorAtStart ? editor.selection.end : adjustedSelectionStartPos,
+          isCursorAtStart ? adjustedSelectionStartPos : editor.selection.end
+        )
       )
     }
   }
 }
 
 export const activate = (context: vscode.ExtensionContext): void => {
+  // REVIEW: consider using `registerTextEditorCommand`
   const disposable = vscode.commands.registerCommand(
     "jsdoc-comment-toggler.toggle",
     toggleJSDocComment
   )
+
+  if (DEBUG)
+    vscode.window.showInformationMessage("jsdoc comment toggler loaded")
 
   context.subscriptions.push(disposable)
 }

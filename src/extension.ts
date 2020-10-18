@@ -113,7 +113,9 @@ export const toggleJSDocComment = async (): Promise<void> => {
   const isSingleLineComment = lineFirst.lineNumber === lineLast.lineNumber
 
   let jsdocStart = lineFirst.text.match(JSDOC_START_TAG)
+  console.log(`jsdocStart at ch ${jsdocStart?.index}`)
   let jsdocEnd = lineLast.text.match(JSDOC_END_TAG)
+  console.log(`jsdocEnd at ch ${jsdocEnd?.index}`)
 
   // fix multiline selection when open or close tag not selected
   // use start tag on prev line if it exists
@@ -137,34 +139,59 @@ export const toggleJSDocComment = async (): Promise<void> => {
   }
 
   // construct and trigger single batch of changes
-  await editor.edit((editBuilder) => {
-    // #region - remove jsdoc tags (preserves comment body)
-
-    // remove single line comment, no selection or selection
-    if (isSingleLineComment && jsdocStart?.index && jsdocEnd?.index) {
-      editBuilder.replace(
-        new vscode.Range(
-          lineFirst.lineNumber,
-          jsdocStart.index,
-          lineFirst.lineNumber,
-          jsdocStart.index + jsdocStart[0].length
-        ),
-        "// "
-      )
-      editBuilder.delete(
-        new vscode.Range(
-          lineLast.lineNumber,
-          jsdocEnd.index,
-          lineLast.lineNumber,
-          jsdocEnd.index + jsdocEnd[0].length
+  editor.edit((editBuilder) => {
+    // #region - remove single line comment, no selection or selection
+    if (
+      isSingleLineComment &&
+      jsdocStart?.index !== undefined &&
+      jsdocEnd?.index !== undefined &&
+      new vscode.Range(
+        lineFirst.lineNumber,
+        jsdocStart.index,
+        lineLast.lineNumber,
+        jsdocEnd.index + jsdocEnd[0].length
+      ).contains(getEditor().selection.active)
+    ) {
+      log("removing single line jsdoc")
+      if (
+        jsdocEnd.index + jsdocEnd[0].length ===
+        getContentEndPos(lineLast).character
+      ) {
+        editBuilder.replace(
+          new vscode.Range(
+            lineFirst.lineNumber,
+            jsdocStart.index,
+            lineFirst.lineNumber,
+            jsdocStart.index + jsdocStart[0].length
+          ),
+          "// "
         )
-      )
+        editBuilder.delete(
+          new vscode.Range(
+            lineLast.lineNumber,
+            jsdocEnd.index,
+            lineLast.lineNumber,
+            jsdocEnd.index + jsdocEnd[0].length
+          )
+        )
+      } else {
+        editBuilder.replace(
+          new vscode.Range(
+            lineFirst.lineNumber,
+            jsdocStart.index,
+            lineFirst.lineNumber,
+            jsdocStart.index + jsdocStart[0].length
+          ),
+          "/* "
+        )
+      }
 
       return
     }
 
-    // remove multi line comment
-    if (jsdocStart?.index && jsdocEnd?.index) {
+    // #region - remove multi line comment
+    if (!isSingleLineComment && jsdocStart?.index && jsdocEnd?.index) {
+      log("removing multi line jsdoc")
       // open & close tags (first and last line)
       editBuilder.delete(lineFirst.rangeIncludingLineBreak)
       editBuilder.delete(lineLast.rangeIncludingLineBreak)
@@ -193,28 +220,30 @@ export const toggleJSDocComment = async (): Promise<void> => {
       return
     }
 
-    // #region - insert jsdoc tags, none already exist
-    // insert single line comment
+    // #region - insert single line comment
     if (isSingleLineComment) {
       if (hasSelection(editor)) {
-        editBuilder.insert(editor.selection.start, "/** ")
-        editBuilder.insert(editor.selection.end, " */")
+        // TODO: implement this
+        // editBuilder.insert(editor.selection.start, "/** ")
+        // editBuilder.insert(editor.selection.end, " */")
+        if (isSingleLineComment) return
       } else {
+        log("inserting single line jsdoc")
         // no selection
-        const contentStart = lineFirst.text.slice(
-          lineFirst.firstNonWhitespaceCharacterIndex
-        )
-        const commentTag = contentStart.match(COMMENT_START_TAG)
-        if (commentTag)
-          editBuilder.replace(
-            new vscode.Range(
-              lineFirst.lineNumber,
-              lineFirst.firstNonWhitespaceCharacterIndex,
-              lineFirst.lineNumber,
-              lineFirst.firstNonWhitespaceCharacterIndex + commentTag[0].length
-            ),
-            "/** "
-          )
+        // const contentStart = lineFirst.text.slice(
+        //   lineFirst.firstNonWhitespaceCharacterIndex
+        // )
+        // const commentTag = contentStart.match(COMMENT_START_TAG)
+        // if (commentTag)
+        //   editBuilder.replace(
+        //     new vscode.Range(
+        //       lineFirst.lineNumber,
+        //       lineFirst.firstNonWhitespaceCharacterIndex,
+        //       lineFirst.lineNumber,
+        //       lineFirst.firstNonWhitespaceCharacterIndex + commentTag[0].length
+        //     ),
+        //     "/** "
+        //   )
 
         if (getEditor().selection.active.character > 0) {
           const prevChar = getEditor().document.getText(
@@ -245,19 +274,20 @@ export const toggleJSDocComment = async (): Promise<void> => {
           ),
           ` */${nextChar && nextChar !== " " ? " " : ""}${nextChar}`
         )
-
-        adjustCursorPos(isSingleLineComment)
       }
+
+      adjustCursorPos(isSingleLineComment)
 
       return
     }
 
-    // insert multi line comment
+    // #region - insert multi line comment
+    log("inserting multi line jsdoc")
     const indentation = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
     editBuilder.insert(getContentStartPos(lineFirst), `/**\n${indentation}`)
     // target all lines between opening tag exclusive and closing tag inclusive
     for (let i = lineFirst.lineNumber; i <= lineLast.lineNumber; i += 1) {
-      const line = vscode?.window?.activeTextEditor?.document.lineAt(i)
+      const line = getEditor().document.lineAt(i)
       console.log("line", line)
       // eslint-disable-next-line no-continue
       if (!line) continue

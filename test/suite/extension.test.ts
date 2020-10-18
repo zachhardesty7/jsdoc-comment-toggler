@@ -9,7 +9,7 @@ import * as assert from "assert"
 import * as path from "path"
 import * as vscode from "vscode"
 import * as Mocha from "mocha"
-import { toggleJSDocComment } from "../../src/extension"
+import { getEditor, toggleJSDocComment } from "../../src/extension"
 
 const testsFolder = "../../../test/examples/"
 const resultsFolder = "../../../test/results/"
@@ -22,12 +22,6 @@ interface Targets {
   anchor?: vscode.Position
   /** target cursor position */
   active?: vscode.Position
-}
-
-const getEditor = () => {
-  const editor = vscode.window.activeTextEditor
-  if (!editor) throw new Error("no active editor, make sure a file is open")
-  return editor
 }
 
 const loadFile = async (fileName: string): Promise<string> => {
@@ -64,7 +58,9 @@ const itHasCursorSelectionPosition = (targets: Targets) => {
   it("has cursor & selection at correct position", () => {
     const { anchor, active } = targets
     if (!anchor || !active)
-      throw new Error("missing anchor or active target positions")
+      throw new ReferenceError(
+        "target anchor and/or active positions not found"
+      )
 
     assert.deepStrictEqual(
       {
@@ -75,20 +71,20 @@ const itHasCursorSelectionPosition = (targets: Targets) => {
         anchor,
         active,
       },
-      "cursor and/or selection not in expected position"
+      "cursor and/or selection in incorrect position"
     )
   })
 }
 
 const itHasTargetText = (targets: Targets) => {
-  it("starts with proper comment tag chars", () => {
+  it("has the expected text output", () => {
     const { content } = targets
-    if (!content) throw new Error("missing target content")
+    if (!content) throw new ReferenceError("target output content not found")
 
     assert.strictEqual(
       getEditor().document.getText(),
       content,
-      "incorrect textual content"
+      "output text incorrect"
     )
   })
 }
@@ -110,7 +106,7 @@ const loadTextAndToggleJsdoc = (
   await toggleJSDocComment()
 }
 
-const runTest = (
+const itHasCorrectOutputAndSelectionPositions = (
   fileName: string,
   anchorInitialLine: number,
   anchorInitialChar: number,
@@ -148,33 +144,50 @@ const runTest = (
   itHasCursorSelectionPosition(targets)
 }
 
+const itHasCorrectOutputAndCursorPosition = (
+  fileName: string,
+  cursorInitialLine: number,
+  cursorInitialChar: number,
+  cursorLineDelta: number,
+  cursorCharDelta: number
+) =>
+  itHasCorrectOutputAndSelectionPositions(
+    fileName,
+    cursorInitialLine,
+    cursorInitialChar,
+    cursorInitialLine,
+    cursorInitialChar,
+    cursorLineDelta,
+    cursorCharDelta,
+    cursorLineDelta,
+    cursorCharDelta
+  )
+
 // #region - single line tests
-describe("single line jsdoc comments", () => {
-  // describe("add new comment op", () => {
+describe("single line jsdoc comment", () => {
+  // "add new comment op"
   describe("adding new comment", () => {
-    describe("when cursor is anywhere, but has NO selection", () => {
-      const cursorInitialPos = new vscode.Position(0, 18)
-
-      const targets: Targets = {
-        anchor: cursorInitialPos.translate(0, 4),
-        active: cursorInitialPos.translate(0, 4),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "singleAdd.js",
-          targets,
-          cursorInitialPos,
-          cursorInitialPos
-        )
+    describe("when NO selection", () => {
+      describe(
+        "when cursor is at start of line",
+        itHasCorrectOutputAndCursorPosition("singleAddStart.js", 1, 0, 0, 4)
       )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
+      describe(
+        "when cursor is at end of line",
+        itHasCorrectOutputAndCursorPosition("singleAddEnd.js", 0, 0, 0, 4)
+      )
+      describe(
+        "when cursor has space on left and right",
+        itHasCorrectOutputAndCursorPosition("singleAddSpaced.js", 0, 19, 0, 4)
+      )
+      describe(
+        "when cursor is missing a space on left and right",
+        itHasCorrectOutputAndCursorPosition("singleAddUnspaced.js", 0, 18, 0, 5)
+      )
     })
 
     // REVIEW: honestly can't think of a use-case for this
-    describe("when selection exists within interior of line", () => {
+    describe.skip("when selection exists within interior of line", () => {
       const anchorInitialPos = new vscode.Position(0, 21)
       const activeInitialPos = new vscode.Position(0, 32)
 
@@ -199,6 +212,9 @@ describe("single line jsdoc comments", () => {
 
   describe("converting existing comment", () => {
     describe("when it's a line comment", () => {
+      // TODO: make sure and arbitrary spaces are handled
+      describe.skip("when it's missing spaces and is ugly", () => {})
+
       describe("when it's alone on a line", () => {
         describe("when NO selection", () => {
           describe("when cursor is in middle of comment", () => {
@@ -287,31 +303,87 @@ describe("single line jsdoc comments", () => {
         })
         describe.skip("when selection", () => {})
       })
-      describe.skip("when it's trailing code", () => {
-        describe.skip("when NO selection", () => {
-          describe.skip("when cursor is in middle of comment", () => {})
-          describe.skip("when cursor is before first comment char of line comment", () => {})
-          describe.skip("when cursor is at end of line comment", () => {})
-          describe.skip("when cursor is before line comment start", () => {})
-        })
-        describe.skip("when selection", () => {})
-      })
-      describe.skip("when it's unspaced", () => {
-        describe.skip("when NO selection", () => {
-          describe.skip("when cursor is in middle of comment", () => {})
-          describe.skip("when cursor is before first comment char of line comment", () => {})
-          describe.skip("when cursor is at end of line comment", () => {})
-          describe.skip("when cursor is before line comment start", () => {})
+
+      describe("when it's trailing code", () => {
+        describe("when NO selection", () => {
+          describe(
+            "when cursor is before comment",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineTrailing.js",
+              2,
+              6,
+              -1,
+              0
+            )
+          )
+          // NOTE: requires calc, test is hardcoded
+          describe(
+            "when cursor is after comment starts",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineTrailing.js",
+              2,
+              25,
+              -1,
+              -12
+            )
+          )
         })
         describe.skip("when selection", () => {})
       })
     })
-    describe.skip("when it's a block comment", () => {
-      describe.skip("when it's alone on a line", () => {})
-      describe.skip("when it's internal & surrounded by code", () => {})
-      describe.skip("when it's leading code", () => {})
-      describe.skip("when it's trailing code", () => {})
-      describe.skip("when it's unspaced", () => {})
+
+    describe("when it's a block comment", () => {
+      describe(
+        "when it's alone on a line",
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlock.js",
+          1,
+          12,
+          0,
+          1
+        )
+      )
+      describe(
+        "when it's internal & surrounded by code",
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlockInternal.js",
+          1,
+          23,
+          0,
+          1
+        )
+      )
+      describe(
+        "when it's leading code",
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlockLeading.js",
+          2,
+          18,
+          0,
+          1
+        )
+      )
+      // NOTE: requires calc, test is hardcoded
+      describe(
+        "when it's trailing code",
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlockTrailing.js",
+          1,
+          23,
+          0,
+          -10
+        )
+      )
+      describe(
+        "when it's missing spaces and ugly",
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlockUnspaced.js",
+          1,
+          11,
+          0,
+          2
+        )
+      )
     })
   })
 })
@@ -339,10 +411,22 @@ describe("remove existing jsdoc", () => {
       itHasCursorSelectionPosition(targets)
     })
   })
-  describe.skip("when it's internal & surrounded by code", () => {})
-  describe.skip("when it's leading code", () => {})
-  describe.skip("when it's trailing code", () => {})
-  describe.skip("when it's unspaced", () => {})
+  describe(
+    "when it's internal & surrounded by code",
+    itHasCorrectOutputAndCursorPosition("singleRemoveInternal.js", 1, 24, 0, -1)
+  )
+  describe(
+    "when it's leading code",
+    itHasCorrectOutputAndCursorPosition("singleRemoveLeading.js", 2, 13, 0, -1)
+  )
+  describe(
+    "when it's trailing code",
+    itHasCorrectOutputAndCursorPosition("singleRemoveTrailing.js", 1, 25, 0, -1)
+  )
+  describe(
+    "when it's unspaced",
+    itHasCorrectOutputAndCursorPosition("singleRemoveUnspaced.js", 1, 12, 0, 0)
+  )
 })
 
 // #region - multiline comments
@@ -350,7 +434,17 @@ describe("multi line jsdoc comment", () => {
   describe("add", () => {
     describe(
       "selection not before or at end (internal)",
-      runTest("multiAdd.js", 2, 5, 1, 5, 1, 3, 1, 3)
+      itHasCorrectOutputAndSelectionPositions(
+        "multiAdd.js",
+        2,
+        5,
+        1,
+        5,
+        1,
+        3,
+        1,
+        3
+      )
     )
 
     // REVIEW: not sure this makes sense

@@ -25,6 +25,7 @@ interface Targets {
   active?: vscode.Position
 }
 
+// NOTE: async required to keep files from overwriting editor
 const loadFile = async (fileName: string): Promise<string> => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
@@ -90,6 +91,7 @@ const itHasCursorSelectionPosition = (targets: Targets) => {
   })
 }
 
+// NOTE: async required to keep files from overwriting editor
 const loadTextAndToggleJsdoc = (
   fileName: string,
   targets: Targets,
@@ -165,9 +167,9 @@ const itHasCorrectOutputAndCursorPosition = (
   )
 
 // #region - single line tests
-describe("single line jsdoc comment", () => {
+describe.only("single line jsdoc comment", () => {
   // "add new comment op"
-  describe.only("adding new comment", () => {
+  describe("adding new comment", () => {
     describe("when NO selection", () => {
       describe(
         "when cursor is at start of line",
@@ -218,89 +220,49 @@ describe("single line jsdoc comment", () => {
 
       describe("when it's alone on a line", () => {
         describe("when NO selection", () => {
-          describe("when cursor is in middle of comment", () => {
-            const cursorInitialPos = new vscode.Position(1, 10)
-
-            const targets: Targets = {
-              anchor: cursorInitialPos.translate(0, 1),
-              active: cursorInitialPos.translate(0, 1),
-            }
-
-            before(
-              loadTextAndToggleJsdoc(
-                "singleConvertLine.js",
-                targets,
-                cursorInitialPos,
-                cursorInitialPos
-              )
+          describe(
+            "when cursor is in middle of comment",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLine.js",
+              2,
+              10,
+              0,
+              1
             )
+          )
 
-            itHasTargetText(targets)
-            itHasCursorSelectionPosition(targets)
-          })
-
-          describe("when cursor is before first comment char of line comment", () => {
-            const cursorInitialPos = new vscode.Position(1, 5)
-
-            const targets: Targets = {
-              anchor: cursorInitialPos.translate(0, 1),
-              active: cursorInitialPos.translate(0, 1),
-            }
-
-            before(
-              loadTextAndToggleJsdoc(
-                "singleConvertLine.js",
-                targets,
-                cursorInitialPos,
-                cursorInitialPos
-              )
+          describe(
+            "when cursor is before first comment char of line comment",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLine.js",
+              1,
+              5,
+              0,
+              1
             )
+          )
 
-            itHasTargetText(targets)
-            itHasCursorSelectionPosition(targets)
-          })
-
-          describe("when cursor is at end of line comment", () => {
-            const cursorInitialPos = new vscode.Position(1, 32)
-
-            const targets: Targets = {
-              anchor: cursorInitialPos.translate(0, 1),
-              active: cursorInitialPos.translate(0, 1),
-            }
-
-            before(
-              loadTextAndToggleJsdoc(
-                "singleConvertLine.js",
-                targets,
-                cursorInitialPos,
-                cursorInitialPos
-              )
+          describe(
+            "when cursor is at end of line comment",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLine.js",
+              1,
+              32,
+              0,
+              1
             )
+          )
 
-            itHasTargetText(targets)
-            itHasCursorSelectionPosition(targets)
-          })
-
-          describe("when cursor is before line comment start", () => {
-            const cursorInitialPos = new vscode.Position(1, 1)
-
-            const targets: Targets = {
-              anchor: cursorInitialPos,
-              active: cursorInitialPos,
-            }
-
-            before(
-              loadTextAndToggleJsdoc(
-                "singleConvertLine.js",
-                targets,
-                cursorInitialPos,
-                cursorInitialPos
-              )
+          describe(
+            "when cursor is before line comment start",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLine.js",
+              1,
+              1,
+              0,
+              0
             )
-
-            itHasTargetText(targets)
-            itHasCursorSelectionPosition(targets)
-          })
+          )
         })
         describe.skip("when selection", () => {})
       })

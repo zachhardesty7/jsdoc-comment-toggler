@@ -1,6 +1,6 @@
 import { cyan, red, yellowBright } from "ansi-colors"
 
-const VERBOSE = process.env.VERBOSE_TESTS ?? false
+const VERBOSE = process.env.VERBOSE_TESTS === "true"
 
 /**
  * simple wrapper around `console.log` that only logs when `VERBOSE` is true

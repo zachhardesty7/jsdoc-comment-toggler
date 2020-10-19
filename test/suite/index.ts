@@ -17,6 +17,7 @@ export const run = (
   const mocha = new Mocha({
     ui: "bdd",
     color: true,
+    inlineDiffs: true,
   })
 
   const scratchpadUri = path.join(
@@ -24,6 +25,7 @@ export const run = (
     "../../../test/suite/scratchpad.js"
   )
 
+  // NOTE: async required to keep files from overwriting editor
   glob("**/**.test.js", { cwd: testsRoot }, async (err, files) => {
     if (err) {
       log.error("glob err", err)
@@ -47,10 +49,11 @@ export const run = (
     try {
       // Run the mocha test
       return mocha.run((failures) => {
+        log.error(`${failures} tests failed`)
         cb(null, failures)
       })
     } catch (error) {
-      log.error(error)
+      log.error("caught err", error)
       return cb(error)
     }
   })

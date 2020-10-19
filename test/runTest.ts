@@ -26,7 +26,7 @@ async function main() {
     await runTests({ extensionDevelopmentPath, extensionTestsPath })
     log.info("All tests passed!")
   } catch {
-    log.warn(`Some tests failed`)
+    log.warn("Some tests failed")
   } finally {
     console.timeEnd(`${cyan("info")} Time to complete all tests`)
   }

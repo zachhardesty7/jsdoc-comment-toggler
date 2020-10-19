@@ -1,6 +1,6 @@
 import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 
-const DEBUG = process.env.DEBUG_EXTENSION ?? false
+const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
 // regexes
 const COMMENT_START_TAG = /\/\/\s?/
@@ -201,9 +201,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   const isSingleLineComment = lineFirst.lineNumber === lineLast.lineNumber
 
   let jsdocStart = lineFirst.text.match(JSDOC_START_TAG)
-  log(`jsdocStart at ch ${jsdocStart?.index}`)
   let jsdocEnd = lineLast.text.match(JSDOC_END_TAG)
-  log(`jsdocEnd at ch ${jsdocEnd?.index}`)
 
   // fix multiline selection when open or close tag not selected
   // use start tag on prev line if it exists

@@ -1,5 +1,5 @@
 export const obj = {
   foo: "bar",
-  // example docs for `baz`
+  // example docs  for `baz`
   baz: "quux",
 }

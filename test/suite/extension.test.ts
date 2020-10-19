@@ -57,37 +57,55 @@ const loadFile = async (fileName: string): Promise<string> => {
 }
 
 const itHasTargetText = (targets: Targets) => {
-  it("has the expected text output", () => {
-    const { content } = targets
-    if (!content) throw new ReferenceError("target output content not found")
+  Error.stackTraceLimit = 25 // NOTE: may need adjustment
+  const stack: { stack: string } = { stack: "" }
+  Error.captureStackTrace(stack)
 
-    assert.strictEqual(
-      getEditor().document.getText(),
-      content,
-      "output text incorrect"
-    )
+  it("has the expected text output", () => {
+    try {
+      const { content } = targets
+      if (!content) throw new ReferenceError("target output content not found")
+
+      assert.strictEqual(
+        getEditor().document.getText(),
+        content,
+        "output text incorrect"
+      )
+    } catch (error) {
+      error.stack = stack.stack
+      throw error
+    }
   })
 }
 
 const itHasCursorSelectionPosition = (targets: Targets) => {
-  it("has cursor & selection at correct position", () => {
-    const { anchor, active } = targets
-    if (!anchor || !active)
-      throw new ReferenceError(
-        "target anchor and/or active positions not found"
-      )
+  Error.stackTraceLimit = 25 // NOTE: may need adjustment
+  const stack: { stack: string } = { stack: "" }
+  Error.captureStackTrace(stack)
 
-    assert.deepStrictEqual(
-      {
-        anchor: getEditor().selection.anchor,
-        active: getEditor().selection.active,
-      },
-      {
-        anchor,
-        active,
-      },
-      "cursor and/or selection in incorrect position"
-    )
+  it("has cursor & selection at correct position", () => {
+    try {
+      const { anchor, active } = targets
+      if (!anchor || !active)
+        throw new ReferenceError(
+          "target anchor and/or active positions not found"
+        )
+
+      assert.deepStrictEqual(
+        {
+          anchor: getEditor().selection.anchor,
+          active: getEditor().selection.active,
+        },
+        {
+          anchor,
+          active,
+        },
+        "cursor and/or selection in incorrect position"
+      )
+    } catch (error) {
+      error.stack = stack.stack
+      throw error
+    }
   })
 }
 
@@ -225,20 +243,20 @@ describe.only("single line jsdoc comment", () => {
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
               2,
-              10,
+              18,
               0,
               1
             )
           )
 
-          describe(
+          describe.skip(
             "when cursor is before first comment char of line comment",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
+              2,
               1,
-              5,
               0,
-              1
+              0
             )
           )
 
@@ -246,8 +264,8 @@ describe.only("single line jsdoc comment", () => {
             "when cursor is at end of line comment",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
-              1,
-              32,
+              2,
+              28,
               0,
               1
             )
@@ -257,7 +275,7 @@ describe.only("single line jsdoc comment", () => {
             "when cursor is before line comment start",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
-              1,
+              2,
               1,
               0,
               0

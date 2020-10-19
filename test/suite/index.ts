@@ -9,6 +9,8 @@ import { log } from "../utils"
 
 import "source-map-support/register"
 
+const DEBUG_TESTS = process.env.DEBUG_TESTS === "true"
+
 export const run = (
   testsRoot: string,
   cb: (error: Error | null, failures?: number) => void
@@ -18,6 +20,7 @@ export const run = (
     ui: "bdd",
     color: true,
     inlineDiffs: true,
+    bail: DEBUG_TESTS,
   })
 
   const scratchpadUri = path.join(

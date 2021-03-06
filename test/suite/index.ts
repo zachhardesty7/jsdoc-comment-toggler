@@ -42,7 +42,8 @@ export const run = (
     )
     await vscode.window.showTextDocument(document)
     // editor isn't immediately available when `showTextDocument` promise fulfills
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    const HALF_SECOND = 500
+    await new Promise((resolve) => setTimeout(resolve, HALF_SECOND))
 
     // Add files to the test suite
     files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)))

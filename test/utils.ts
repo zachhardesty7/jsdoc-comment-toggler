@@ -8,7 +8,9 @@ const VERBOSE = process.env.VERBOSE_TESTS === "true"
  * @param messages - items to print to console
  */
 export const log = (...messages: unknown[]): void => {
-  if (VERBOSE) console.log(...messages)
+  if (VERBOSE) {
+    console.log(...messages) // NOSONAR
+  }
 }
 
 /**
@@ -18,7 +20,9 @@ export const log = (...messages: unknown[]): void => {
  * @param messages - items to print to console
  */
 log.info = (...messages: unknown[]): void => {
-  if (VERBOSE) console.info(cyan("info"), ...messages)
+  if (VERBOSE) {
+    console.info(cyan("info"), ...messages)
+  }
 }
 
 /**
@@ -28,7 +32,9 @@ log.info = (...messages: unknown[]): void => {
  * @param messages - items to print to console
  */
 log.warn = (...messages: unknown[]): void => {
-  if (VERBOSE) console.warn(yellowBright("warn"), ...messages)
+  if (VERBOSE) {
+    console.warn(yellowBright("warn"), ...messages) // NOSONAR
+  }
 }
 
 /**
@@ -38,5 +44,7 @@ log.warn = (...messages: unknown[]): void => {
  * @param messages - items to print to console
  */
 log.error = (...messages: unknown[]): void => {
-  if (VERBOSE) console.error(red("error"), ...messages)
+  if (VERBOSE) {
+    console.error(red("error"), ...messages) // NOSONAR
+  }
 }

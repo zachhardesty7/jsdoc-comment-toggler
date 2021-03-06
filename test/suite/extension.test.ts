@@ -45,10 +45,11 @@ const loadFile = async (fileName: string): Promise<string> => {
   })
 
   // normalize to UNIX line endings (`\n`)
-  if (JSON.stringify(editor.document.getText()).includes("\\r\\n"))
+  if (JSON.stringify(editor.document.getText()).includes("\\r\\n")) {
     await editor.edit((editBuilder) => {
       editBuilder.setEndOfLine(vscode.EndOfLine.LF)
     })
+  }
 
   // REVIEW: still need delay?
   // await new Promise((resolve) => setTimeout(resolve, 20))
@@ -64,7 +65,9 @@ const itHasTargetText = (targets: Targets) => {
   it("has the expected text output", () => {
     try {
       const { content } = targets
-      if (!content) throw new ReferenceError("target output content not found")
+      if (!content) {
+        throw new ReferenceError("target output content not found")
+      }
 
       assert.strictEqual(
         getEditor().document.getText(),
@@ -86,10 +89,11 @@ const itHasCursorSelectionPosition = (targets: Targets) => {
   it("has cursor & selection at correct position", () => {
     try {
       const { anchor, active } = targets
-      if (!anchor || !active)
+      if (!anchor || !active) {
         throw new ReferenceError(
           "target anchor and/or active positions not found"
         )
+      }
 
       assert.deepStrictEqual(
         {
@@ -234,7 +238,9 @@ describe.only("single line jsdoc comment", () => {
   describe("converting existing comment", () => {
     describe("when it's a line comment", () => {
       // TODO: make sure and arbitrary spaces are handled
-      describe.skip("when it's missing spaces and is ugly", () => {})
+      describe.skip("when it's missing spaces and is ugly", () => {
+        /* TODO: implement */
+      })
 
       describe("when it's alone on a line", () => {
         describe("when NO selection", () => {
@@ -282,7 +288,9 @@ describe.only("single line jsdoc comment", () => {
             )
           )
         })
-        describe.skip("when selection", () => {})
+        describe.skip("when selection", () => {
+          /* TODO: implement */
+        })
       })
 
       describe("when it's trailing code", () => {
@@ -309,7 +317,9 @@ describe.only("single line jsdoc comment", () => {
             )
           )
         })
-        describe.skip("when selection", () => {})
+        describe.skip("when selection", () => {
+          /* TODO: implement */
+        })
       })
     })
 

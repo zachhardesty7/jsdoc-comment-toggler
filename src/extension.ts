@@ -3,10 +3,16 @@ import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
 // regexes
-const COMMENT_START_TAG = /\/\/\s?/
+const LINE_COMMENT_TAG = /\/\/\s?/
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
 const JSDOC_LINE_CHAR = /\s\*\s/
+
+export const log = (...messages: unknown[]): void => {
+  if (DEBUG) {
+    console.debug(...messages) // NOSONAR
+  }
+}
 
 /**
  * helper to guarantee the active editor is defined.
@@ -19,34 +25,30 @@ const JSDOC_LINE_CHAR = /\s\*\s/
  */
 export const getEditor = (): vscode.TextEditor => {
   const editor = vscode.window.activeTextEditor
-  if (!editor) throw new Error("no active editor, make sure a file is open")
+  if (!editor) {
+    throw new Error("no active editor, make sure a file is open")
+  }
   return editor
 }
 
-export const log = (...messages: unknown[]): void => {
-  if (DEBUG) {
-    console.log(...messages)
-  }
-}
-
 const setCursorSelection = (selection: vscode.Selection) => {
-  if (DEBUG) {
-    if (!getEditor().selection.active.isEqual(selection.active))
-      log(
-        `adjusting cursor: [${getEditor().selection.active.line}, ${
-          getEditor().selection.active.character
-        }] => [${selection.active.line}, ${selection.active.character}]`
-      )
-
-    if (
-      hasSelection(getEditor()) &&
-      !getEditor().selection.anchor.isEqual(selection.anchor)
+  if (!getEditor().selection.active.isEqual(selection.active)) {
+    log(
+      `adjusting cursor: [${getEditor().selection.active.line}, ${
+        getEditor().selection.active.character
+      }] => [${selection.active.line}, ${selection.active.character}]`
     )
-      log(
-        `adjusting anchor: [${getEditor().selection.anchor.line}, ${
-          getEditor().selection.anchor.character
-        }] => [${selection.anchor.line}, ${selection.anchor.character}]`
-      )
+  }
+
+  if (
+    hasSelection(getEditor()) &&
+    !getEditor().selection.anchor.isEqual(selection.anchor)
+  ) {
+    log(
+      `adjusting anchor: [${getEditor().selection.anchor.line}, ${
+        getEditor().selection.anchor.character
+      }] => [${selection.anchor.line}, ${selection.anchor.character}]`
+    )
   }
 
   getEditor().selection = selection
@@ -135,11 +137,10 @@ const adjustCursorPos = (isSingleLineComment: boolean) => {
           isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
         )
       )
+    } else {
+      //  no selection, cursor somewhere in the middle
+      //  no adjustment needed
     }
-    // else {
-    //  no selection, cursor somewhere in the middle
-    //  no adjustment needed
-    // }
   } else {
     // adjust multiline comment cursor
     // selection ends at end of line
@@ -226,7 +227,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
   // construct and trigger single batch of changes
   return editor.edit((editBuilder) => {
-    // #region - remove single line comment, no selection or selection
+    // #region - remove single line jsdoc, no selection or selection
     if (
       isSingleLineComment &&
       jsdocStart?.index !== undefined &&
@@ -278,7 +279,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
       return
     }
 
-    // #region - remove multi line comment
+    // #region - remove multi line jsdoc
     if (!isSingleLineComment && jsdocStart?.index && jsdocEnd?.index) {
       log("removing multi line jsdoc")
       // open & close tags (first and last line)
@@ -294,7 +295,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         const line = editor.document.lineAt(i)
         const jsdocComment = line.text.match(JSDOC_LINE_CHAR)
 
-        if (jsdocComment?.index)
+        if (jsdocComment?.index) {
           editBuilder.replace(
             new vscode.Range(
               line.lineNumber,
@@ -304,65 +305,90 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             ),
             "// "
           )
+        }
       }
       // handled removing existing jsdoc, job done
       return
     }
 
-    // #region - insert single line comment
+    // #region - no jsdoc exists
     if (isSingleLineComment) {
+      const lineCommentTag = lineFirst.text.match(LINE_COMMENT_TAG)
+      const isLineCommentFullLine =
+        lineFirst.firstNonWhitespaceCharacterIndex === lineCommentTag?.index
+
       if (hasSelection(editor)) {
         // TODO: implement this
         // editBuilder.insert(editor.selection.start, "/** ")
         // editBuilder.insert(editor.selection.end, " */")
-        if (isSingleLineComment) return
+        if (isSingleLineComment) {
+          return
+        }
       } else {
         log("inserting single line jsdoc")
         // no selection
-        // const contentStart = lineFirst.text.slice(
-        //   lineFirst.firstNonWhitespaceCharacterIndex
-        // )
-        // const commentTag = contentStart.match(COMMENT_START_TAG)
-        // if (commentTag)
-        //   editBuilder.replace(
-        //     new vscode.Range(
-        //       lineFirst.lineNumber,
-        //       lineFirst.firstNonWhitespaceCharacterIndex,
-        //       lineFirst.lineNumber,
-        //       lineFirst.firstNonWhitespaceCharacterIndex + commentTag[0].length
-        //     ),
-        //     "/** "
-        //   )
 
-        if (getEditor().selection.active.character > 0) {
-          const prevChar = getEditor().document.getText(
+        if (lineCommentTag) {
+          log("lineCommentTag", lineCommentTag)
+          editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active.translate(0, -1),
-              getEditor().selection.active
+              lineFirst.lineNumber,
+              lineFirst.firstNonWhitespaceCharacterIndex,
+              lineFirst.lineNumber,
+              lineFirst.firstNonWhitespaceCharacterIndex +
+                lineCommentTag[0].length
+            ),
+            "/** "
+          )
+
+          if (isLineCommentFullLine) {
+            const lastChar = getEditor().document.getText(
+              new vscode.Range(
+                getContentEndPos(lineFirst).translate(0, -1),
+                getContentEndPos(lineFirst)
+              )
+            )
+
+            editBuilder.insert(
+              getContentEndPos(lineFirst),
+              `${lastChar && lastChar !== " " ? " " : ""}*/`
+            )
+          }
+
+          // no line or block comment already exists
+        } else {
+          if (getEditor().selection.active.character > 0) {
+            const prevChar = getEditor().document.getText(
+              new vscode.Range(
+                getEditor().selection.active.translate(0, -1),
+                getEditor().selection.active
+              )
+            )
+
+            if (prevChar !== " ") {
+              editBuilder.insert(getEditor().selection.active, " ")
+            }
+          }
+
+          editBuilder.insert(getEditor().selection.active, "/** ")
+        }
+
+        if (!isLineCommentFullLine) {
+          const nextChar = getEditor().document.getText(
+            new vscode.Range(
+              getEditor().selection.active,
+              getEditor().selection.active.translate(0, 1)
             )
           )
 
-          if (prevChar !== " ") {
-            editBuilder.insert(getEditor().selection.active, " ")
-          }
-        }
-
-        editBuilder.insert(getEditor().selection.active, "/** ")
-
-        const nextChar = getEditor().document.getText(
-          new vscode.Range(
-            getEditor().selection.active,
-            getEditor().selection.active.translate(0, 1)
+          editBuilder.replace(
+            new vscode.Range(
+              getEditor().selection.active,
+              getEditor().selection.active.translate(0, 1)
+            ),
+            ` */${nextChar && nextChar !== " " ? " " : ""}${nextChar}`
           )
-        )
-
-        editBuilder.replace(
-          new vscode.Range(
-            getEditor().selection.active,
-            getEditor().selection.active.translate(0, 1)
-          ),
-          ` */${nextChar && nextChar !== " " ? " " : ""}${nextChar}`
-        )
+        }
       }
 
       adjustCursorPos(isSingleLineComment)
@@ -378,23 +404,25 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     for (let i = lineFirst.lineNumber; i <= lineLast.lineNumber; i += 1) {
       const line = getEditor().document.lineAt(i)
       log("line", line)
-      // eslint-disable-next-line no-continue
-      if (!line) continue
-      const contentStart = line.text.slice(
-        line.firstNonWhitespaceCharacterIndex
-      )
-      const commentTag = contentStart.match(COMMENT_START_TAG)
-      if (commentTag)
-        editBuilder.replace(
-          new vscode.Range(
-            line.lineNumber,
-            line.firstNonWhitespaceCharacterIndex,
-            line.lineNumber,
-            line.firstNonWhitespaceCharacterIndex + commentTag[0].length
-          ),
-          " * "
+      if (line) {
+        const contentStart = line.text.slice(
+          line.firstNonWhitespaceCharacterIndex
         )
-      else editBuilder.insert(getContentStartPos(line), " * ")
+        const commentTag = contentStart.match(LINE_COMMENT_TAG)
+        if (commentTag) {
+          editBuilder.replace(
+            new vscode.Range(
+              line.lineNumber,
+              line.firstNonWhitespaceCharacterIndex,
+              line.lineNumber,
+              line.firstNonWhitespaceCharacterIndex + commentTag[0].length
+            ),
+            " * "
+          )
+        } else {
+          editBuilder.insert(getContentStartPos(line), " * ")
+        }
+      }
     }
 
     editBuilder.insert(getContentEndPos(lineLast), `\n${indentation} */`)
@@ -408,8 +436,9 @@ export const activate = (context: vscode.ExtensionContext): void => {
     toggleJSDocComment
   )
 
-  if (DEBUG)
+  if (DEBUG) {
     vscode.window.showInformationMessage("jsdoc comment toggler loaded")
+  }
 
   context.subscriptions.push(disposable)
 }

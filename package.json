@@ -71,8 +71,8 @@
     "watch": "tsc -watch -p ./",
     "pack": "vsce package",
     "upload": "vsce publish",
-    "pub": "npm-run-all compile pack upload",
-    "run-test": "node --async-stack-traces ./out/test/runTest.js",
+    "pub": "npm-run-all clean compile pack upload",
+    "run-test": "node -r dotenv/config --async-stack-traces ./out/test/runTest.js",
     "test": "npm-run-all compile run-test"
   },
   "devDependencies": {

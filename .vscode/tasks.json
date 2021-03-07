@@ -15,7 +15,7 @@
     {
       "type": "shell",
       "command": "yarn compile",
-      "label": "yarn compile",
+      "label": "yarn: compile",
       "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {
@@ -29,7 +29,7 @@
     {
       "type": "shell",
       "command": "yarn watch",
-      "label": "yarn watch",
+      "label": "yarn: watch",
       "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {

@@ -3,7 +3,7 @@ import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
 // regexes
-const LINE_COMMENT_TAG = /\/\//
+const LINE_COMMENT_TAG = "//"
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
 const JSDOC_LINE_CHAR = /\s\*\s/
@@ -127,7 +127,9 @@ const adjustCursorPos = (isSingleLineComment: boolean) => {
       })
     } else if (hasSelection(editor)) {
       // any selection
-      const adjustedSelectionEndPos = editor.selection.end.translate(0, -3)
+      const adjustedSelectionEndPos = editor.selection.end.translate({
+        characterDelta: -3,
+      })
 
       const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
 
@@ -172,7 +174,7 @@ const adjustCursorPos = (isSingleLineComment: boolean) => {
     ) {
       const adjustedSelectionStartPos = getContentStartPos(
         editor.selection.start.line + 1
-      ).translate(0, 2)
+      ).translate({ characterDelta: 2 })
 
       // ensure cursor is at same side of selection
       const isCursorAtStart = cursorPos.isEqual(editor.selection.start)
@@ -327,7 +329,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
       } else {
         log("inserting single line jsdoc")
 
-        if (lineCommentTag) {
+        if (lineCommentTag?.index) {
           const firstChar = getEditor().document.getText(
             new vscode.Range(
               lineFirst.lineNumber,
@@ -341,22 +343,22 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
 
           const indent = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
-          editBuilder.replace(
-            new vscode.Range(
-              lineFirst.lineNumber,
-              0,
-              lineFirst.lineNumber,
-              lineFirst.firstNonWhitespaceCharacterIndex +
-                lineCommentTag[0].length
-            ),
-            ""
-          )
-          editBuilder.insert(
-            new vscode.Position(lineFirst.lineNumber, 0),
-            `${indent}/**${firstChar !== " " ? " " : ""}`
-          )
-
           if (isLineCommentFullLine) {
+            editBuilder.replace(
+              new vscode.Range(
+                lineFirst.lineNumber,
+                0,
+                lineFirst.lineNumber,
+                lineFirst.firstNonWhitespaceCharacterIndex +
+                  lineCommentTag[0].length
+              ),
+              ""
+            )
+            editBuilder.insert(
+              new vscode.Position(lineFirst.lineNumber, 0),
+              `${indent}/**${firstChar !== " " ? " " : ""}`
+            )
+
             const lastChar = getEditor().document.getText(
               new vscode.Range(
                 getContentEndPos(lineFirst).translate(0, -1),
@@ -367,6 +369,57 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             editBuilder.insert(
               getContentEndPos(lineFirst),
               `${lastChar && lastChar !== " " ? " " : ""}*/`
+            )
+          } else {
+            const prevContent = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  getContentStartPos(lineFirst),
+                  new vscode.Position(
+                    lineFirst.lineNumber,
+                    lineCommentTag.index
+                  )
+                )
+              )
+              .trim()
+
+            const prevCommentChars = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  new vscode.Position(
+                    lineFirst.lineNumber,
+                    lineCommentTag.index + 3
+                  ),
+                  getEditor().selection.active
+                )
+              )
+              .trim()
+            const nextCommentChars = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  getEditor().selection.active,
+                  getContentEndPos(lineFirst)
+                )
+              )
+              .trim()
+
+            const commentChars = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  new vscode.Position(
+                    lineFirst.lineNumber,
+                    lineCommentTag.index + 2
+                  ),
+                  getContentEndPos(lineFirst)
+                )
+              )
+              .trim()
+            editBuilder.replace(
+              new vscode.Range(
+                new vscode.Position(getEditor().selection.active.line, 0),
+                getContentEndPos(lineFirst)
+              ),
+              `${indent}/** ${commentChars} */\n${indent}${prevContent}`
             )
           }
 
@@ -382,7 +435,9 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
           if (
             getEditor().selection.active.character === 0 ||
-            adjacentChars === "  "
+            adjacentChars === "  " ||
+            getEditor().document.lineAt(getEditor().selection.active)
+              .isEmptyOrWhitespace
           ) {
             editBuilder.insert(getEditor().selection.active, "/** ")
             editBuilder.replace(
@@ -410,16 +465,15 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
                 new vscode.Position(getEditor().selection.active.line, 0),
                 getEditor().selection.active
               ),
-              `/** `
+              ``
             )
+            editBuilder.insert(getEditor().selection.active, `${indent}/** `)
             editBuilder.replace(
               new vscode.Range(
                 getEditor().selection.active,
                 getEditor().selection.active.translate(0, 1)
               ),
-              ` */\n${indent}${prevChars}${
-                adjacentChars[1] ? adjacentChars[1] : ""
-              }`
+              ` */\n${prevChars}${adjacentChars[1] ? adjacentChars[1] : ""}`
             )
           }
         }

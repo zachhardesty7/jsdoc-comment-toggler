@@ -262,14 +262,47 @@ describe.only("single line jsdoc comment", () => {
             )
           )
 
-          describe.skip(
-            "when cursor is before first comment char of line comment",
+          describe(
+            "when cursor is before comment",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
               2,
               1,
               0,
-              0
+              4
+            )
+          )
+
+          describe(
+            "when cursor is inside comment tag",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLine.js",
+              2,
+              3,
+              0,
+              2
+            )
+          )
+
+          describe(
+            "when cursor is just after comment tag before a space",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLine.js",
+              2,
+              4,
+              0,
+              1
+            )
+          )
+
+          describe(
+            "when cursor is just after space after comment tag",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLine.js",
+              2,
+              5,
+              0,
+              1
             )
           )
 
@@ -281,17 +314,6 @@ describe.only("single line jsdoc comment", () => {
               28,
               0,
               1
-            )
-          )
-
-          describe(
-            "when cursor is before line comment start",
-            itHasCorrectOutputAndCursorPosition(
-              "singleConvertLine.js",
-              2,
-              1,
-              0,
-              0
             )
           )
         })

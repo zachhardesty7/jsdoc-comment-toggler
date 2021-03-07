@@ -3,7 +3,7 @@ import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
 // regexes
-const LINE_COMMENT_TAG = /\/\/\s?/
+const LINE_COMMENT_TAG = /\/\//
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
 const JSDOC_LINE_CHAR = /\s\*\s/
@@ -328,16 +328,32 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         log("inserting single line jsdoc")
 
         if (lineCommentTag) {
-          log("lineCommentTag", lineCommentTag)
+          const firstChar = getEditor().document.getText(
+            new vscode.Range(
+              lineFirst.lineNumber,
+              lineFirst.firstNonWhitespaceCharacterIndex +
+                lineCommentTag[0].length,
+              lineFirst.lineNumber,
+              lineFirst.firstNonWhitespaceCharacterIndex +
+                lineCommentTag[0].length +
+                1
+            )
+          )
+
+          const indent = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
           editBuilder.replace(
             new vscode.Range(
               lineFirst.lineNumber,
-              lineFirst.firstNonWhitespaceCharacterIndex,
+              0,
               lineFirst.lineNumber,
               lineFirst.firstNonWhitespaceCharacterIndex +
                 lineCommentTag[0].length
             ),
-            "/** "
+            ""
+          )
+          editBuilder.insert(
+            new vscode.Position(lineFirst.lineNumber, 0),
+            `${indent}/**${firstChar !== " " ? " " : ""}`
           )
 
           if (isLineCommentFullLine) {

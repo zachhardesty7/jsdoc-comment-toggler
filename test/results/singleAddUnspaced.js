@@ -1,1 +1,2 @@
-export const foo = /**  */ varNeedingToBeTypeCast
+/**  */
+export const foo =varNeedingToBeTypeCast

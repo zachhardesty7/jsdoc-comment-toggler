@@ -199,15 +199,22 @@ describe.only("single line jsdoc comment", () => {
       )
       describe(
         "when cursor is at end of line",
-        itHasCorrectOutputAndCursorPosition("singleAddEnd.js", 0, 0, 0, 4)
+        itHasCorrectOutputAndCursorPosition("singleAddEnd.js", 0, 24, 0, -20)
       )
       describe(
         "when cursor has space on left and right",
         itHasCorrectOutputAndCursorPosition("singleAddSpaced.js", 0, 19, 0, 4)
       )
+      // REVIEW: maybe add an inline jsdoc comment
       describe(
         "when cursor is missing a space on left and right",
-        itHasCorrectOutputAndCursorPosition("singleAddUnspaced.js", 0, 18, 0, 5)
+        itHasCorrectOutputAndCursorPosition(
+          "singleAddUnspaced.js",
+          0,
+          18,
+          0,
+          -14
+        )
       )
     })
 

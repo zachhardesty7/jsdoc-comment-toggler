@@ -10,7 +10,7 @@ const JSDOC_LINE_CHAR = /\s\*\s/
 
 export const log = (...messages: unknown[]): void => {
   if (DEBUG) {
-    console.debug(...messages) // NOSONAR
+    console.log(...messages) // NOSONAR
   }
 }
 
@@ -326,7 +326,6 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         }
       } else {
         log("inserting single line jsdoc")
-        // no selection
 
         if (lineCommentTag) {
           log("lineCommentTag", lineCommentTag)
@@ -357,37 +356,56 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
           // no line or block comment already exists
         } else {
-          if (getEditor().selection.active.character > 0) {
-            const prevChar = getEditor().document.getText(
+          const adjacentRange = new vscode.Range(
+            getEditor().selection.active.line,
+            Math.max(getEditor().selection.active.character - 1, 0),
+            getEditor().selection.active.line,
+            getEditor().selection.active.character + 1
+          )
+          const adjacentChars = getEditor().document.getText(adjacentRange)
+
+          if (
+            getEditor().selection.active.character === 0 ||
+            adjacentChars === "  "
+          ) {
+            editBuilder.insert(getEditor().selection.active, "/** ")
+            editBuilder.replace(
               new vscode.Range(
-                getEditor().selection.active.translate(0, -1),
+                getEditor().selection.active,
+                getEditor().selection.active.translate(0, 1)
+              ),
+              ` */${adjacentChars[0] && adjacentChars[0] !== " " ? " " : ""}${
+                adjacentChars[0] ? adjacentChars[0] : ""
+              }`
+            )
+          } else {
+            const indent = " ".repeat(
+              lineFirst.firstNonWhitespaceCharacterIndex
+            )
+            const prevChars = getEditor().document.getText(
+              new vscode.Range(
+                new vscode.Position(getEditor().selection.active.line, 0),
                 getEditor().selection.active
               )
             )
 
-            if (prevChar !== " ") {
-              editBuilder.insert(getEditor().selection.active, " ")
-            }
-          }
-
-          editBuilder.insert(getEditor().selection.active, "/** ")
-        }
-
-        if (!isLineCommentFullLine) {
-          const nextChar = getEditor().document.getText(
-            new vscode.Range(
-              getEditor().selection.active,
-              getEditor().selection.active.translate(0, 1)
+            editBuilder.replace(
+              new vscode.Range(
+                new vscode.Position(getEditor().selection.active.line, 0),
+                getEditor().selection.active
+              ),
+              `/** `
             )
-          )
-
-          editBuilder.replace(
-            new vscode.Range(
-              getEditor().selection.active,
-              getEditor().selection.active.translate(0, 1)
-            ),
-            ` */${nextChar && nextChar !== " " ? " " : ""}${nextChar}`
-          )
+            editBuilder.replace(
+              new vscode.Range(
+                getEditor().selection.active,
+                getEditor().selection.active.translate(0, 1)
+              ),
+              ` */\n${indent}${prevChars}${
+                adjacentChars[1] ? adjacentChars[1] : ""
+              }`
+            )
+          }
         }
       }
 

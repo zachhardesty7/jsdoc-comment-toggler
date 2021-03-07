@@ -1,3 +1,11 @@
+// useful API pages
+// https://code.visualstudio.com/api/references/vscode-api#TextEditor
+// https://code.visualstudio.com/api/references/vscode-api#TextDocument
+// https://code.visualstudio.com/api/references/vscode-api#TextLine
+// https://code.visualstudio.com/api/references/vscode-api#Selection
+// https://code.visualstudio.com/api/references/vscode-api#Position
+// https://code.visualstudio.com/api/references/vscode-api#Range
+
 import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 
 const DEBUG = process.env.DEBUG_EXTENSION === "true"

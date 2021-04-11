@@ -207,7 +207,7 @@ describe.only("single line jsdoc comment", () => {
       )
       // REVIEW: maybe add an inline jsdoc comment
       describe(
-        "when cursor is missing a space on left and right",
+        "when cursor is missing a space on left or right",
         itHasCorrectOutputAndCursorPosition(
           "singleAddUnspaced.js",
           0,
@@ -218,7 +218,7 @@ describe.only("single line jsdoc comment", () => {
       )
     })
 
-    // REVIEW: honestly can't think of a use-case for this
+    // TODO: parens and add inline comment before selection
     describe.skip("when selection exists within interior of line", () => {
       const anchorInitialPos = new vscode.Position(0, 21)
       const activeInitialPos = new vscode.Position(0, 32)
@@ -244,7 +244,7 @@ describe.only("single line jsdoc comment", () => {
 
   describe("converting existing comment", () => {
     describe("when it's a line comment", () => {
-      // TODO: make sure and arbitrary spaces are handled
+      // TODO: make sure any arbitrary spaces are handled
       describe.skip("when it's missing spaces and is ugly", () => {
         /* TODO: implement */
       })
@@ -252,7 +252,7 @@ describe.only("single line jsdoc comment", () => {
       describe("when it's alone on a line", () => {
         describe("when NO selection", () => {
           describe(
-            "when cursor is in middle of comment",
+            "when cursor's inside",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
               2,
@@ -262,7 +262,8 @@ describe.only("single line jsdoc comment", () => {
             )
           )
 
-          describe(
+          // TODO: needs new file
+          describe.skip(
             "when cursor is before comment",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
@@ -324,24 +325,24 @@ describe.only("single line jsdoc comment", () => {
 
       describe("when it's trailing code", () => {
         describe("when NO selection", () => {
-          describe(
+          // FIXME: create new tag
+          describe.skip(
             "when cursor is before comment",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLineTrailing.js",
               2,
               6,
-              -1,
+              0,
               0
             )
           )
-          // NOTE: requires calc, test is hardcoded
           describe(
-            "when cursor is after comment starts",
+            "when cursor's inside",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLineTrailing.js",
               2,
               25,
-              -1,
+              0,
               -12
             )
           )
@@ -383,18 +384,28 @@ describe.only("single line jsdoc comment", () => {
           1
         )
       )
-      // NOTE: requires calc, test is hardcoded
       describe(
-        "when it's trailing code",
+        "when it's trailing comment",
         itHasCorrectOutputAndCursorPosition(
           "singleConvertBlockTrailing.js",
-          1,
+          3,
+          23,
+          0,
+          -12
+        )
+      )
+      describe(
+        "when it's trailing comment inside comma",
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlockTrailingComma.js",
+          2,
           23,
           0,
           -10
         )
       )
-      describe(
+      // TODO: doesn't add space afterward
+      describe.skip(
         "when it's missing spaces and ugly",
         itHasCorrectOutputAndCursorPosition(
           "singleConvertBlockUnspaced.js",
@@ -410,7 +421,7 @@ describe.only("single line jsdoc comment", () => {
 
 describe("remove existing jsdoc", () => {
   describe("when it's alone on a line", () => {
-    describe("cursor anywhere", () => {
+    describe("when cursor's inside", () => {
       const cursorInitialPos = new vscode.Position(1, 20)
 
       const targets: Targets = {

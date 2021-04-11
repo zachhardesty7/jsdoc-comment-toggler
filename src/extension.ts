@@ -12,6 +12,8 @@ const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
 // regexes
 const LINE_COMMENT_TAG = "//"
+const BLOCK_COMMENT_START_TAG = "/*"
+const BLOCK_COMMENT_END_TAG = "*/"
 const JSDOC_START_TAG = /\/\*\*\s?/
 const JSDOC_END_TAG = /\s?\*\//
 const JSDOC_LINE_CHAR = /\s\*\s/
@@ -209,7 +211,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   let lineFirst = editor.document.lineAt(editor.selection.start.line)
   let lineLast = editor.document.lineAt(editor.selection.end.line)
 
-  const isSingleLineComment = lineFirst.lineNumber === lineLast.lineNumber
+  const isSingleLineSelected = lineFirst.lineNumber === lineLast.lineNumber
 
   let jsdocStart = lineFirst.text.match(JSDOC_START_TAG)
   let jsdocEnd = lineLast.text.match(JSDOC_END_TAG)
@@ -237,9 +239,9 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
   // construct and trigger single batch of changes
   return editor.edit((editBuilder) => {
-    // #region - remove single line jsdoc, no selection or selection
+    // #region - remove single line jsdoc, selection or no selection
     if (
-      isSingleLineComment &&
+      isSingleLineSelected &&
       jsdocStart?.index !== undefined &&
       jsdocEnd?.index !== undefined &&
       new vscode.Range(
@@ -290,7 +292,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     }
 
     // #region - remove multi line jsdoc
-    if (!isSingleLineComment && jsdocStart?.index && jsdocEnd?.index) {
+    if (!isSingleLineSelected && jsdocStart?.index && jsdocEnd?.index) {
       log("removing multi line jsdoc")
       // open & close tags (first and last line)
       editBuilder.delete(lineFirst.rangeIncludingLineBreak)
@@ -322,30 +324,150 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     }
 
     // #region - no jsdoc exists
-    if (isSingleLineComment) {
+    if (isSingleLineSelected) {
       const lineCommentTag = lineFirst.text.match(LINE_COMMENT_TAG)
+      const blockCommentStartIndex = lineFirst.text.indexOf(
+        BLOCK_COMMENT_START_TAG
+      )
+      const blockCommentEndIndex = lineFirst.text.indexOf(BLOCK_COMMENT_END_TAG)
       const isLineCommentFullLine =
         lineFirst.firstNonWhitespaceCharacterIndex === lineCommentTag?.index
+      const isBlockCommentTrailing =
+        lineFirst.firstNonWhitespaceCharacterIndex !== blockCommentStartIndex &&
+        (lineFirst.text.length - BLOCK_COMMENT_END_TAG.length ===
+          blockCommentEndIndex ||
+          lineFirst.text.length - BLOCK_COMMENT_END_TAG.length - 1 ===
+            blockCommentEndIndex)
 
       if (hasSelection(editor)) {
         // TODO: implement this
         // editBuilder.insert(editor.selection.start, "/** ")
         // editBuilder.insert(editor.selection.end, " */")
-        if (isSingleLineComment) {
+        if (isSingleLineSelected) {
           return
         }
       } else {
         log("inserting single line jsdoc")
 
-        if (lineCommentTag?.index) {
+        // block comment already exists
+        if (
+          blockCommentStartIndex > -1 &&
+          blockCommentEndIndex > -1 &&
+          getEditor().selection.active.character > blockCommentStartIndex &&
+          getEditor().selection.active.character <
+            blockCommentEndIndex + BLOCK_COMMENT_END_TAG.length
+        ) {
+          const firstChar = getEditor().document.getText(
+            new vscode.Range(
+              lineFirst.lineNumber,
+              blockCommentStartIndex + BLOCK_COMMENT_START_TAG.length,
+              lineFirst.lineNumber,
+              blockCommentStartIndex + BLOCK_COMMENT_START_TAG.length + 1
+            )
+          )
+
+          if (isBlockCommentTrailing) {
+            const indent = " ".repeat(
+              lineFirst.firstNonWhitespaceCharacterIndex
+            )
+            const prevContent = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  getContentStartPos(lineFirst),
+                  new vscode.Position(
+                    lineFirst.lineNumber,
+                    blockCommentStartIndex
+                  )
+                )
+              )
+              .trim()
+            const nextContent = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  new vscode.Position(
+                    lineFirst.lineNumber,
+                    blockCommentEndIndex + BLOCK_COMMENT_END_TAG.length
+                  ),
+                  getContentEndPos(lineLast)
+                )
+              )
+              .trim()
+
+            const prevCommentChars = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  new vscode.Position(
+                    lineFirst.lineNumber,
+                    blockCommentStartIndex + BLOCK_COMMENT_START_TAG.length
+                  ),
+                  getEditor().selection.active
+                )
+              )
+              .trimStart()
+            const nextCommentChars = getEditor()
+              .document.getText(
+                new vscode.Range(
+                  getEditor().selection.active,
+                  new vscode.Position(
+                    lineFirst.lineNumber,
+                    blockCommentEndIndex
+                  )
+                )
+              )
+              .trimEnd()
+
+            editBuilder.replace(
+              new vscode.Range(
+                new vscode.Position(getEditor().selection.active.line, 0),
+                getEditor().selection.active
+              ),
+              ""
+            )
+            editBuilder.insert(
+              new vscode.Position(getEditor().selection.active.line, 0),
+              `${indent}/** ${prevCommentChars}`
+            )
+            editBuilder.replace(
+              new vscode.Range(
+                new vscode.Position(
+                  getEditor().selection.active.line,
+                  getEditor().selection.active.character
+                ),
+                getContentEndPos(getEditor().selection.active.line)
+              ),
+              `${nextCommentChars} */\n${indent}${prevContent}${nextContent}`
+            )
+          } else {
+            // block comment not alone
+            editBuilder.replace(
+              new vscode.Range(
+                lineFirst.lineNumber,
+                blockCommentStartIndex,
+                lineFirst.lineNumber,
+                blockCommentStartIndex + BLOCK_COMMENT_START_TAG.length
+              ),
+              ""
+            )
+
+            editBuilder.insert(
+              new vscode.Position(lineFirst.lineNumber, blockCommentStartIndex),
+              `/**${firstChar !== " " ? " " : ""}`
+            )
+          }
+
+          // line comment already exists
+        } else if (
+          lineCommentTag?.index &&
+          getEditor().selection.active.character > lineCommentTag.index
+        ) {
           const firstChar = getEditor().document.getText(
             new vscode.Range(
               lineFirst.lineNumber,
               lineFirst.firstNonWhitespaceCharacterIndex +
-                lineCommentTag[0].length,
+                LINE_COMMENT_TAG.length,
               lineFirst.lineNumber,
               lineFirst.firstNonWhitespaceCharacterIndex +
-                lineCommentTag[0].length +
+                LINE_COMMENT_TAG.length +
                 1
             )
           )
@@ -358,7 +480,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
                 0,
                 lineFirst.lineNumber,
                 lineFirst.firstNonWhitespaceCharacterIndex +
-                  lineCommentTag[0].length
+                  LINE_COMMENT_TAG.length
               ),
               ""
             )
@@ -396,12 +518,12 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
                 new vscode.Range(
                   new vscode.Position(
                     lineFirst.lineNumber,
-                    lineCommentTag.index + 3
+                    lineCommentTag.index + LINE_COMMENT_TAG.length
                   ),
                   getEditor().selection.active
                 )
               )
-              .trim()
+              .trimStart()
             const nextCommentChars = getEditor()
               .document.getText(
                 new vscode.Range(
@@ -409,29 +531,30 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
                   getContentEndPos(lineFirst)
                 )
               )
-              .trim()
+              .trimEnd()
 
-            const commentChars = getEditor()
-              .document.getText(
-                new vscode.Range(
-                  new vscode.Position(
-                    lineFirst.lineNumber,
-                    lineCommentTag.index + 2
-                  ),
-                  getContentEndPos(lineFirst)
-                )
-              )
-              .trim()
             editBuilder.replace(
               new vscode.Range(
                 new vscode.Position(getEditor().selection.active.line, 0),
-                getContentEndPos(lineFirst)
+                getEditor().selection.active
               ),
-              `${indent}/** ${commentChars} */\n${indent}${prevContent}`
+              ""
+            )
+            editBuilder.insert(
+              new vscode.Position(getEditor().selection.active.line, 0),
+              `${indent}/** ${prevCommentChars}`
+            )
+            editBuilder.replace(
+              new vscode.Range(
+                new vscode.Position(
+                  getEditor().selection.active.line,
+                  getEditor().selection.active.character
+                ),
+                getContentEndPos(getEditor().selection.active.line)
+              ),
+              `${nextCommentChars} */\n${indent}${prevContent}`
             )
           }
-
-          // no line or block comment already exists
         } else {
           const adjacentRange = new vscode.Range(
             getEditor().selection.active.line,
@@ -487,7 +610,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         }
       }
 
-      adjustCursorPos(isSingleLineComment)
+      adjustCursorPos(isSingleLineSelected)
 
       return
     }

@@ -4,7 +4,7 @@
   "preview": true,
   "displayName": "jsdoc comment toggler",
   "description": "toggle JSDoc comment on line or selection",
-  "icon": "https://raw.githubusercontent.com/zachhardesty7/jsdoc-comment-toggler/master/images/jsdoc-icon.png",
+  "icon": "images/jsdoc-icon.png",
   "galleryBanner": {
     "color": "#34223A",
     "theme": "dark"
@@ -87,11 +87,11 @@
     "compile": "tsc -p ./",
     "lint": "eslint . --ext .ts,.tsx",
     "watch": "tsc -watch -p ./",
-    "pack": "vsce package",
-    "upload": "vsce publish",
-    "pub": "npm-run-all clean compile pack upload",
-    "run-test": "node -r dotenv/config --async-stack-traces ./out/test/runTest.js",
-    "test": "npm-run-all compile run-test"
+    "_pack": "vsce package",
+    "_upload": "vsce publish",
+    "pub": "npm-run-all clean compile _pack _upload",
+    "_run-test": "node -r dotenv/config --async-stack-traces ./out/test/runTest.js",
+    "test": "npm-run-all compile _run-test"
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
@@ -110,7 +110,7 @@
     "prettier": "^2.1.2",
     "source-map-support": "^0.5.19",
     "typescript": "^4.0.3",
-    "vsce": "^1.81.1",
+    "vsce": "^1.87.1",
     "vscode-test": "^1.4.0"
   }
 }

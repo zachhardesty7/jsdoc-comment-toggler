@@ -1,8 +1,14 @@
 {
   "name": "jsdoc-comment-toggler",
+  "version": "1.4.1",
+  "preview": true,
   "displayName": "jsdoc comment toggler",
-  "description": "Toggle JSDoc comment on line or selection",
-  "version": "1.4.0",
+  "description": "toggle JSDoc comment on line or selection",
+  "icon": "https://raw.githubusercontent.com/zachhardesty7/jsdoc-comment-toggler/master/images/jsdoc-icon.png",
+  "galleryBanner": {
+    "color": "#34223A",
+    "theme": "dark"
+  },
   "eslintConfig": {
     "root": true,
     "parser": "@typescript-eslint/parser",
@@ -64,6 +70,18 @@
       }
     ]
   },
+  "keybindings": [
+    {
+      "key": "ctrl+k ctrl+/",
+      "command": "jsdoc-comment-toggler.toggle",
+      "when": "!isMac && editorTextFocus"
+    },
+    {
+      "key": "cmd+k cmd+/",
+      "command": "jsdoc-comment-toggler.toggle",
+      "when": "isMac && editorTextFocus"
+    }
+  ],
   "scripts": {
     "clean": "rm -rf ./out",
     "compile": "tsc -p ./",

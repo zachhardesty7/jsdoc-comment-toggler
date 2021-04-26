@@ -413,26 +413,10 @@ describe.only("single line jsdoc comment", () => {
 
 describe("remove existing jsdoc", () => {
   describe("when it's alone on a line", () => {
-    describe("when cursor's inside", () => {
-      const cursorInitialPos = new vscode.Position(1, 20)
-
-      const targets: Targets = {
-        anchor: cursorInitialPos.translate(0, -4),
-        active: cursorInitialPos.translate(0, -4),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "singleRemove.js",
-          targets,
-          cursorInitialPos,
-          cursorInitialPos
-        )
-      )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
+    describe(
+      "when cursor's inside",
+      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 20, 0, -4)
+    )
   })
   describe(
     "when it's internal & surrounded by code",
@@ -471,73 +455,52 @@ describe("multi line jsdoc comment", () => {
     )
 
     // REVIEW: not sure this makes sense
-    describe("selection is before first non-whitespace char", () => {
-      const activeInitialPos = new vscode.Position(1, 1)
-      const anchorInitialPos = new vscode.Position(2, 5)
-
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(1, 3),
-        active: activeInitialPos.translate(1, 4),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "multiAdd.js",
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+    describe(
+      "selection is before first non-whitespace char",
+      itHasCorrectOutputAndSelectionPositions(
+        "multiAdd.js",
+        1,
+        1,
+        2,
+        5,
+        1,
+        3,
+        1,
+        4
       )
+    )
 
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
-
-    describe("selection is at end", () => {
-      const anchorInitialPos = new vscode.Position(2, 13)
-      const activeInitialPos = new vscode.Position(1, 5)
-
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(1, 3),
-        active: activeInitialPos.translate(1, 3),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "multiAdd.js",
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+    describe(
+      "selection is at end",
+      itHasCorrectOutputAndSelectionPositions(
+        "multiAdd.js",
+        2,
+        13,
+        1,
+        5,
+        1,
+        3,
+        1,
+        3
       )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
+    )
   })
 
   describe("convert", () => {
-    describe("selection not before or at end (internal)", () => {
-      const anchorInitialPos = new vscode.Position(2, 9)
-      const activeInitialPos = new vscode.Position(1, 9)
-
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(1, 1),
-        active: activeInitialPos.translate(1, 0),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "multiConvertLine.js",
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+    describe(
+      "selection not before or at end (internal)",
+      itHasCorrectOutputAndSelectionPositions(
+        "multiConvertLine.js",
+        2,
+        9,
+        1,
+        9,
+        1,
+        1,
+        1,
+        0
       )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
+    )
 
     // REVIEW: not sure this makes sense
     describe("selection is before first non-whitespace char", () => {
@@ -562,27 +525,20 @@ describe("multi line jsdoc comment", () => {
       itHasCursorSelectionPosition(targets)
     })
 
-    describe("selection is at end", () => {
-      const anchorInitialPos = new vscode.Position(2, 16)
-      const activeInitialPos = new vscode.Position(1, 9)
-
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(1, 0),
-        active: activeInitialPos.translate(1, 0),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "multiConvertLine.js",
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+    describe(
+      "selection is at end",
+      itHasCorrectOutputAndSelectionPositions(
+        "multiConvertLine.js",
+        2,
+        16,
+        1,
+        9,
+        1,
+        0,
+        1,
+        0
       )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
+    )
   })
 
   describe("remove", () => {
@@ -608,48 +564,36 @@ describe("multi line jsdoc comment", () => {
       itHasCursorSelectionPosition(targets)
     })
 
-    describe("neither the start nor end tags' lines are within selection", () => {
-      const anchorInitialPos = new vscode.Position(3, 8)
-      const activeInitialPos = new vscode.Position(2, 8)
+    describe(
+      "neither the start nor end tags' lines are within selection",
 
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(-1, 0),
-        active: activeInitialPos.translate(-1, 0),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "multiRemove.js",
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+      itHasCorrectOutputAndSelectionPositions(
+        "multiConvertLine.js",
+        3,
+        8,
+        2,
+        8,
+        -1,
+        0,
+        -1,
+        0
       )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
+    )
 
     // TODO: single line multi line block comment
-    describe("no selection & cursor is anywhere within", () => {
-      const cursorInitialPos = new vscode.Position(2, 8)
-
-      const targets: Targets = {
-        anchor: cursorInitialPos.translate(-1, -3),
-        active: cursorInitialPos.translate(-1, -3),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "multiAdd.js",
-          targets,
-          cursorInitialPos,
-          cursorInitialPos
-        )
+    describe(
+      "no selection & cursor is anywhere within",
+      itHasCorrectOutputAndSelectionPositions(
+        "multiAdd.js",
+        2,
+        8,
+        2,
+        8,
+        -1,
+        -3,
+        -1,
+        -3
       )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
+    )
   })
 })

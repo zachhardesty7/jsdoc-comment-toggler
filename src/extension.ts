@@ -14,9 +14,9 @@ const DEBUG = process.env.DEBUG_EXTENSION === "true"
 const LINE_COMMENT_TAG = "//"
 const BLOCK_COMMENT_START_TAG = "/*"
 const BLOCK_COMMENT_END_TAG = "*/"
-const JSDOC_START_TAG = /\/\*\*\s?/
-const JSDOC_END_TAG = /\s?\*\//
-const JSDOC_LINE_CHAR = /\s\*\s/
+const JSDOC_START_REGEX = /\/\*\*\s?/
+const JSDOC_END_REGEX = /\s?\*\//
+const JSDOC_LINE_CHAR_REGEX = /\s\*\s/
 
 export const log = (...messages: unknown[]): void => {
   if (DEBUG) {
@@ -133,22 +133,8 @@ const adjustCursorPos = (isSingleLineComment: boolean) => {
         to: "left",
         by: "character",
         value: 3,
-        select: false,
+        select: hasSelection(editor),
       })
-    } else if (hasSelection(editor)) {
-      // any selection
-      const adjustedSelectionEndPos = editor.selection.end.translate({
-        characterDelta: -3,
-      })
-
-      const isCursorAtEnd = cursorPos.isEqual(editor.selection.end)
-
-      setCursorSelection(
-        new vscode.Selection(
-          isCursorAtEnd ? editor.selection.start : adjustedSelectionEndPos,
-          isCursorAtEnd ? adjustedSelectionEndPos : editor.selection.start
-        )
-      )
     } else {
       //  no selection, cursor somewhere in the middle
       //  no adjustment needed
@@ -211,16 +197,17 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   let lineFirst = editor.document.lineAt(editor.selection.start.line)
   let lineLast = editor.document.lineAt(editor.selection.end.line)
 
-  const isSingleLineSelected = lineFirst.lineNumber === lineLast.lineNumber
+  /** first line num of selection === last line num */
+  const isSingleLineSelection = lineFirst.lineNumber === lineLast.lineNumber
 
-  let jsdocStart = lineFirst.text.match(JSDOC_START_TAG)
-  let jsdocEnd = lineLast.text.match(JSDOC_END_TAG)
+  let jsdocStart = lineFirst.text.match(JSDOC_START_REGEX)
+  let jsdocEnd = lineLast.text.match(JSDOC_END_REGEX)
 
   // fix multiline selection when open or close tag not selected
   // use start tag on prev line if it exists
   if (!jsdocStart && lineFirst.lineNumber !== 0) {
     const lineBefore = getPrevLine(lineFirst)
-    const jsdocMatch = lineBefore.text.match(JSDOC_START_TAG)
+    const jsdocMatch = lineBefore.text.match(JSDOC_START_REGEX)
     if (jsdocMatch) {
       lineFirst = lineBefore
       jsdocStart = jsdocMatch
@@ -230,7 +217,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   // use end tag on prev line if it exists
   if (!jsdocEnd && lineLast.lineNumber !== editor.document.lineCount - 1) {
     const lineAfter = getNextLine(lineLast)
-    const jsdocMatch = lineAfter.text.match(JSDOC_END_TAG)
+    const jsdocMatch = lineAfter.text.match(JSDOC_END_REGEX)
     if (jsdocMatch) {
       lineLast = lineAfter
       jsdocEnd = jsdocMatch
@@ -241,7 +228,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   return editor.edit((editBuilder) => {
     // #region - remove single line jsdoc, selection or no selection
     if (
-      isSingleLineSelected &&
+      isSingleLineSelection &&
       jsdocStart?.index !== undefined &&
       jsdocEnd?.index !== undefined &&
       new vscode.Range(
@@ -292,7 +279,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     }
 
     // #region - remove multi line jsdoc
-    if (!isSingleLineSelected && jsdocStart?.index && jsdocEnd?.index) {
+    if (!isSingleLineSelection && jsdocStart?.index && jsdocEnd?.index) {
       log("removing multi line jsdoc")
       // open & close tags (first and last line)
       editBuilder.delete(lineFirst.rangeIncludingLineBreak)
@@ -305,7 +292,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         i += 1
       ) {
         const line = editor.document.lineAt(i)
-        const jsdocComment = line.text.match(JSDOC_LINE_CHAR)
+        const jsdocComment = line.text.match(JSDOC_LINE_CHAR_REGEX)
 
         if (jsdocComment?.index) {
           editBuilder.replace(
@@ -323,8 +310,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
       return
     }
 
-    // #region - no jsdoc exists
-    if (isSingleLineSelected) {
+    // #region - no jsdoc exists but possibly block or line comment
+    if (isSingleLineSelection) {
       const lineCommentTag = lineFirst.text.match(LINE_COMMENT_TAG)
       const blockCommentStartIndex = lineFirst.text.indexOf(
         BLOCK_COMMENT_START_TAG
@@ -339,15 +326,32 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           lineFirst.text.length - BLOCK_COMMENT_END_TAG.length - 1 ===
             blockCommentEndIndex)
 
-      if (hasSelection(editor)) {
-        // TODO: implement this
-        // editBuilder.insert(editor.selection.start, "/** ")
-        // editBuilder.insert(editor.selection.end, " */")
-        if (isSingleLineSelected) {
-          return
+      // selection on line without jsdoc
+      if (
+        hasSelection(editor) &&
+        jsdocStart?.index === undefined &&
+        jsdocEnd?.index === undefined
+      ) {
+        editBuilder.insert(editor.selection.start, "/** ")
+
+        // if there's another character after selection, grab position to build bigger range
+        let nextPosition = getEditor().selection.end
+        if (getContentEndPos(lineLast).isEqual(getEditor().selection.end)) {
+          nextPosition = nextPosition.translate({ characterDelta: 1 })
         }
+        // could be a range w/ same end as beginning if selection at end of line
+        const nextCharRange = new vscode.Range(
+          getEditor().selection.end,
+          nextPosition
+        )
+
+        // put jsdoc after next char but shuffle next char to after jsdoc
+        editBuilder.replace(
+          nextCharRange,
+          ` */${getEditor().document.getText(nextCharRange)}`
+        )
       } else {
-        log("inserting single line jsdoc")
+        log("adding single line jsdoc")
 
         // block comment already exists
         if (
@@ -610,7 +614,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         }
       }
 
-      adjustCursorPos(isSingleLineSelected)
+      adjustCursorPos(isSingleLineSelection)
 
       return
     }

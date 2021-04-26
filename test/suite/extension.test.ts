@@ -218,28 +218,20 @@ describe.only("single line jsdoc comment", () => {
       )
     })
 
-    // TODO: parens and add inline comment before selection
-    describe.skip("when selection exists within interior of line", () => {
-      const anchorInitialPos = new vscode.Position(0, 21)
-      const activeInitialPos = new vscode.Position(0, 32)
-
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(0, 4),
-        active: activeInitialPos.translate(0, 4),
-      }
-
-      before(
-        loadTextAndToggleJsdoc(
-          "singleAddSelectionInternal.js",
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+    describe(
+      "when selection exists within interior of line",
+      itHasCorrectOutputAndSelectionPositions(
+        "singleAddSelectionInternal.js",
+        0,
+        21,
+        0,
+        32,
+        0,
+        4,
+        0,
+        4
       )
-
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
-    })
+    )
   })
 
   describe("converting existing comment", () => {

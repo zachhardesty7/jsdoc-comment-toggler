@@ -14,6 +14,9 @@ const DEBUG = process.env.DEBUG_EXTENSION === "true"
 const LINE_COMMENT_TAG = "//"
 const BLOCK_COMMENT_START_TAG = "/*"
 const BLOCK_COMMENT_END_TAG = "*/"
+const JSDOC_START_TAG = "/**"
+const JSDOC_END_TAG = "*/"
+const JSDOC_LINE_CHAR = " *"
 const JSDOC_START_REGEX = /\/\*\*\s?/
 const JSDOC_END_REGEX = /\s?\*\//
 const JSDOC_LINE_CHAR_REGEX = /\s\*\s/
@@ -194,6 +197,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
   let lineFirst = editor.document.lineAt(editor.selection.start.line)
   let lineLast = editor.document.lineAt(editor.selection.end.line)
+  const lineActive = editor.document.lineAt(editor.selection.active.line)
+  const lineAnchor = editor.document.lineAt(editor.selection.anchor.line)
 
   /** first line num of selection === last line num */
   const isSingleLineSelection = lineFirst.lineNumber === lineLast.lineNumber
@@ -203,7 +208,11 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
   // fix multiline selection when open or close tag not selected
   // use start tag on prev line if it exists
-  if (!jsdocStart && lineFirst.lineNumber !== 0) {
+  /** should actually check all lines between `lineFirst` and `lineLast` */
+  const isJsdoc =
+    lineActive.text.trim().startsWith(JSDOC_LINE_CHAR) ||
+    lineAnchor.text.trim().startsWith(JSDOC_LINE_CHAR)
+  if (isJsdoc && !jsdocStart && lineFirst.lineNumber !== 0) {
     const lineBefore = getPrevLine(lineFirst)
     const jsdocMatch = lineBefore.text.match(JSDOC_START_REGEX)
     if (jsdocMatch) {
@@ -213,7 +222,11 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   }
 
   // use end tag on prev line if it exists
-  if (!jsdocEnd && lineLast.lineNumber !== editor.document.lineCount - 1) {
+  if (
+    isJsdoc &&
+    !jsdocEnd &&
+    lineLast.lineNumber !== editor.document.lineCount - 1
+  ) {
     const lineAfter = getNextLine(lineLast)
     const jsdocMatch = lineAfter.text.match(JSDOC_END_REGEX)
     if (jsdocMatch) {
@@ -466,7 +479,24 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         )
 
         const indent = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
-        if (isLineCommentFullLine) {
+        const prevLineText = getPrevLine(lineFirst).text.trim()
+        const nextLineText = getNextLine(lineFirst).text.trim()
+        if (
+          prevLineText.startsWith(JSDOC_START_TAG) ||
+          prevLineText.startsWith(JSDOC_LINE_CHAR) ||
+          nextLineText.startsWith(JSDOC_LINE_CHAR) ||
+          nextLineText.startsWith(JSDOC_END_TAG)
+        ) {
+          editBuilder.replace(
+            new vscode.Range(
+              lineFirst.lineNumber,
+              lineCommentTag.index,
+              lineFirst.lineNumber,
+              lineCommentTag.index + lineCommentTag[0].length
+            ),
+            "*"
+          )
+        } else if (isLineCommentFullLine) {
           editBuilder.replace(
             new vscode.Range(
               lineFirst.lineNumber,

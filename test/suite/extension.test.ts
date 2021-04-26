@@ -315,6 +315,31 @@ describe.only("single line jsdoc comment", () => {
         })
       })
 
+      describe("when it's nested in JSDoc", () => {
+        // TODO: can be improved by also aligning the comment
+        describe(
+          "when NO star proceeds it",
+          itHasCorrectOutputAndCursorPosition(
+            "singleConvertLineNested.js",
+            1,
+            21,
+            0,
+            -1
+          )
+        )
+        // TODO: this
+        describe.skip(
+          "when a star proceeds it",
+          itHasCorrectOutputAndCursorPosition(
+            "singleConvertLineNested.js",
+            3,
+            21,
+            0,
+            -3
+          )
+        )
+      })
+
       describe("when it's trailing code", () => {
         describe("when NO selection", () => {
           // FIXME: create new tag

@@ -7,3 +7,10 @@ vsc-extension-quickstart.md
 **/jsconfig.json
 **/*.map
 **/.eslintrc.json
+**/*.ts
+**/tsconfig.json
+*.env
+out/test/**
+images/jsdoc-icon.psd
+src/**
+jsdoc-comment-toggler-

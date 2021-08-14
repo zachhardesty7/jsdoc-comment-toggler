@@ -57,7 +57,10 @@ const loadFile = async (fileName: string): Promise<string> => {
   return targetContent
 }
 
-const itHasTargetText = (targets: Targets) => {
+const itHasTargetText = (targets: Targets, fileName: string) => {
+  const startingContentUri = path.join(__dirname, testsFolder, fileName)
+  const targetContentUri = path.join(__dirname, resultsFolder, fileName)
+
   Error.stackTraceLimit = 25 // NOTE: may need adjustment
   const stack: { stack: string } = { stack: "" }
   Error.captureStackTrace(stack)
@@ -72,16 +75,23 @@ const itHasTargetText = (targets: Targets) => {
       assert.strictEqual(
         getEditor().document.getText(),
         content,
-        "output text incorrect"
+        `output text incorrect
+        input file: ${startingContentUri}
+        target file: ${targetContentUri}`
       )
     } catch (error) {
-      error.stack = stack.stack
+      if (error instanceof Error) {
+        error.stack = stack.stack
+      }
       throw error
     }
   })
 }
 
-const itHasCursorSelectionPosition = (targets: Targets) => {
+const itHasCursorSelectionPosition = (targets: Targets, fileName: string) => {
+  const startingContentUri = path.join(__dirname, testsFolder, fileName)
+  const targetContentUri = path.join(__dirname, resultsFolder, fileName)
+
   Error.stackTraceLimit = 25 // NOTE: may need adjustment
   const stack: { stack: string } = { stack: "" }
   Error.captureStackTrace(stack)
@@ -104,10 +114,14 @@ const itHasCursorSelectionPosition = (targets: Targets) => {
           anchor,
           active,
         },
-        "cursor and/or selection in incorrect position"
+        `cursor and/or selection in incorrect position
+        input file: ${startingContentUri}
+        target file: ${targetContentUri}`
       )
     } catch (error) {
-      error.stack = stack.stack
+      if (error instanceof Error) {
+        error.stack = stack.stack
+      }
       throw error
     }
   })
@@ -165,8 +179,8 @@ const itHasCorrectOutputAndSelectionPositions = (
     )
   )
 
-  itHasTargetText(targets)
-  itHasCursorSelectionPosition(targets)
+  itHasTargetText(targets, fileName)
+  itHasCursorSelectionPosition(targets, fileName)
 }
 
 const itHasCorrectOutputAndCursorPosition = (
@@ -537,17 +551,19 @@ describe("multi line jsdoc comment", () => {
         active: new vscode.Position(2, 5), // FIXME: hardcoded
       }
 
+      const fileName = "multiConvertLine.js"
+
       before(
         loadTextAndToggleJsdoc(
-          "multiConvertLine.js",
+          fileName,
           targets,
           anchorInitialPos,
           activeInitialPos
         )
       )
 
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
+      itHasTargetText(targets, fileName)
+      itHasCursorSelectionPosition(targets, fileName)
     })
 
     describe(
@@ -576,17 +592,19 @@ describe("multi line jsdoc comment", () => {
         active: activeInitialPos.with({ character: 0 }),
       }
 
+      const fileName = "multiRemove.js"
+
       before(
         loadTextAndToggleJsdoc(
-          "multiRemove.js",
+          fileName,
           targets,
           anchorInitialPos,
           activeInitialPos
         )
       )
 
-      itHasTargetText(targets)
-      itHasCursorSelectionPosition(targets)
+      itHasTargetText(targets, fileName)
+      itHasCursorSelectionPosition(targets, fileName)
     })
 
     describe(

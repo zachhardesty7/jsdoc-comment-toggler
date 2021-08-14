@@ -1,6 +1,6 @@
 {
   "name": "jsdoc-comment-toggler",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "preview": true,
   "displayName": "jsdoc comment toggler",
   "description": "toggle JSDoc comment on line or selection",
@@ -60,7 +60,10 @@
   ],
   "main": "./out/src/extension.js",
   "publisher": "zachhardesty",
-  "repository": "https://github.com/zachhardesty7/jsdoc-comment-toggler",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zachhardesty7/jsdoc-comment-toggler"
+  },
   "license": "MIT",
   "contributes": {
     "commands": [

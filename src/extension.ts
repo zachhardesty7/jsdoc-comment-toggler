@@ -115,6 +115,22 @@ export const getContentEndPos = (
   (typeof line === "number" ? getEditor().document.lineAt(line) : line).range
     .end
 
+/**
+ * @param line - target
+ * @returns concatenated value of indentation on target line
+ */
+export const getIndentation = (line: vscode.TextLine | number): string => {
+  const currentLine =
+    typeof line === "number" ? getEditor().document.lineAt(line) : line
+  return getEditor().document.getText(
+    currentLine.range.with({
+      end: currentLine.range.end.with({
+        character: currentLine.firstNonWhitespaceCharacterIndex,
+      }),
+    })
+  )
+}
+
 // #region - fix cursor / selection pos
 /**
  * if cursor was at end of last line, the comment tag is errantly placed
@@ -382,7 +398,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         )
 
         if (isBlockCommentTrailing) {
-          const indent = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
+          const indent = getIndentation(lineFirst)
           const prevContent = getEditor()
             .document.getText(
               new vscode.Range(
@@ -478,7 +494,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         )
 
-        const indent = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
+        const indent = getIndentation(lineFirst)
         const prevLineText = getPrevLine(lineFirst).text.trim()
         const nextLineText = getNextLine(lineFirst).text.trim()
         if (
@@ -602,7 +618,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         } else {
           // cursor somewhere in middle or at end of line
-          const indent = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
+          const indent = getIndentation(lineFirst)
           const prevChars = getEditor().document.getText(
             new vscode.Range(
               getEditor().selection.active.with({ character: 0 }),
@@ -635,7 +651,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
     // #region - insert multi line comment
     log("inserting multi line jsdoc")
-    const indentation = " ".repeat(lineFirst.firstNonWhitespaceCharacterIndex)
+    const indentation = getIndentation(lineFirst)
     editBuilder.insert(getContentStartPos(lineFirst), `/**\n${indentation}`)
     // target all lines between opening tag exclusive and closing tag inclusive
     for (let i = lineFirst.lineNumber; i <= lineLast.lineNumber; i += 1) {

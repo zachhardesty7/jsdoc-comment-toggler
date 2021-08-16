@@ -1,7 +1,7 @@
 [![version](https://img.shields.io/vscode-marketplace/v/zachhardesty.jsdoc-comment-toggler.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
 [![last updated](https://img.shields.io/visual-studio-marketplace/last-updated/zachhardesty.jsdoc-comment-toggler?color=0fCC10&style=flat-square)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
-[![downloads](https://img.shields.io/vscode-marketplace/d/zachhardesty.jsdoc-comment-toggler.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
-[![license](https://img.shields.io/github/license/zachhardesty7/jsdoc-comment-toggler.svg?style=flat-square)](https://github.com/zachhardesty7/jsdoc-comment-toggler/blob/master/LICENSE)
+[![downloads](https://img.shields.io/vscode-marketplace/d/zachhardesty.jsdoc-comment-toggler.svg?color=0fCC10&style=flat-square)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
+[![license](https://img.shields.io/github/license/zachhardesty7/jsdoc-comment-toggler.svg?color=0fCC10&style=flat-square)](https://github.com/zachhardesty7/jsdoc-comment-toggler/blob/master/LICENSE)
 
 # jsdoc comment toggler
 

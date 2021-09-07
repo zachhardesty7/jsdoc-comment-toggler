@@ -16,7 +16,7 @@ const BLOCK_COMMENT_START_TAG = "/*"
 const BLOCK_COMMENT_END_TAG = "*/"
 const JSDOC_START_TAG = "/**"
 const JSDOC_END_TAG = "*/"
-const JSDOC_LINE_CHAR = " *"
+const JSDOC_LINE_CHAR = "*"
 const JSDOC_START_REGEX = /\/\*\*\s?/
 const JSDOC_END_REGEX = /\s?\*\//
 const JSDOC_LINE_CHAR_REGEX = /\s\*\s/
@@ -534,7 +534,18 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         const indent = getIndentation(lineFirst)
         const prevLineText = getPrevLine(lineFirst).text.trim()
         const nextLineText = getNextLine(lineFirst).text.trim()
-        if (
+        // already starts with a star
+        if (lineFirst.text.trim().startsWith(JSDOC_LINE_CHAR)) {
+          editBuilder.replace(
+            new vscode.Range(
+              lineFirst.lineNumber,
+              lineCommentTag.index,
+              lineFirst.lineNumber,
+              lineCommentTag.index + lineCommentTag[0].length
+            ),
+            ""
+          )
+        } else if (
           prevLineText.startsWith(JSDOC_START_TAG) ||
           prevLineText.startsWith(JSDOC_LINE_CHAR) ||
           nextLineText.startsWith(JSDOC_LINE_CHAR) ||

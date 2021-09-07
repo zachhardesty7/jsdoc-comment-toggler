@@ -334,22 +334,33 @@ describe.only("single line jsdoc comment", () => {
         describe(
           "when NO star proceeds it",
           itHasCorrectOutputAndCursorPosition(
-            "singleConvertLineNested.js",
+            "singleConvertLineNestedA.js",
             1,
             21,
             0,
             -1
           )
         )
-        // TODO: this
-        describe.skip(
-          "when a star proceeds it",
+        // TODO: can be improved by also aligning the comment
+        describe(
+          "when NO star proceeds it in middle",
           itHasCorrectOutputAndCursorPosition(
-            "singleConvertLineNested.js",
-            3,
+            "singleConvertLineNestedB.js",
+            2,
             21,
             0,
-            -3
+            -1
+          )
+        )
+        // TODO: rm extra space
+        describe(
+          "when a star proceeds it",
+          itHasCorrectOutputAndCursorPosition(
+            "singleConvertLineNestedC.js",
+            2,
+            21,
+            0,
+            -2
           )
         )
       })

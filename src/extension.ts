@@ -366,7 +366,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
         // if there's another character after selection, grab position to build bigger range
         let nextPosition = getEditor().selection.end
-        if (getContentEndPos(lineLast).isEqual(getEditor().selection.end)) {
+        if (!getContentEndPos(lineLast).isEqual(getEditor().selection.end)) {
           nextPosition = nextPosition.translate({ characterDelta: 1 })
         }
         // could be a range w/ same end as beginning if selection at end of line

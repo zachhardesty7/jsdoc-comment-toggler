@@ -140,12 +140,27 @@ export const getIndentation = (line: vscode.TextLine | number): string => {
  *
  * @param isSingleLineComment - precalculated
  */
-const adjustCursorPos = (isSingleLineComment: boolean) => {
+const adjustCursorPos = async (isSingleLineComment: boolean) => {
   const editor = getEditor()
   const cursorPos = editor.selection.active
 
   // adjust single line comment cursor
   if (isSingleLineComment) {
+    // if (
+    //   editor.selection.end.isEqual(getContentEndPos(editor.selection.end.line))
+    // ) {
+    //   if (editor.selection.anchor.isAfter(editor.selection.active)) {
+    //     editor.selection = new vscode.Selection(
+    //       editor.selection.anchor.translate({ characterDelta: -3 }),
+    //       editor.selection.active
+    //     )
+    //   } else {
+    //     editor.selection = new vscode.Selection(
+    //       editor.selection.anchor,
+    //       editor.selection.active.translate({ characterDelta: -3 })
+    //     )
+    //   }
+    // }
     // at end of line
     if (cursorPos.isEqual(getContentEndPos(cursorPos.line))) {
       // https://code.visualstudio.com/api/references/commands
@@ -155,6 +170,28 @@ const adjustCursorPos = (isSingleLineComment: boolean) => {
         value: 3,
         select: hasSelection(editor),
       })
+    } else if (
+      // handle backwards selection range at end of line
+      editor.selection.anchor.isEqual(
+        getContentEndPos(editor.selection.anchor.line)
+      )
+    ) {
+      editor.selection = new vscode.Selection(
+        editor.selection.active,
+        editor.selection.anchor
+      )
+      await vscode.commands.executeCommand("cursorMove", {
+        to: "left",
+        by: "character",
+        value: 3,
+        select: hasSelection(editor),
+      })
+      editor.selection = new vscode.Selection(
+        editor.selection.active,
+        editor.selection.anchor
+      )
+    } else {
+      /* noop */
     }
   } else {
     // adjust multiline comment cursor

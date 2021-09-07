@@ -128,60 +128,64 @@ const itHasCursorSelectionPosition = (targets: Targets, fileName: string) => {
 }
 
 // NOTE: async required to keep files from overwriting editor
-const loadTextAndToggleJsdoc = (
-  fileName: string,
-  targets: Targets,
-  anchorInitialPos: vscode.Position,
-  activeInitialPos: vscode.Position
-): Mocha.Func => async () => {
-  const targetContent = await loadFile(fileName)
-  Object.assign(targets, { content: targetContent })
+const loadTextAndToggleJsdoc =
+  (
+    fileName: string,
+    targets: Targets,
+    anchorInitialPos: vscode.Position,
+    activeInitialPos: vscode.Position
+  ): Mocha.Func =>
+  async () => {
+    const targetContent = await loadFile(fileName)
+    Object.assign(targets, { content: targetContent })
 
-  getEditor().selection = new vscode.Selection(
-    anchorInitialPos,
-    activeInitialPos
-  )
-
-  await toggleJSDocComment()
-}
-
-const itHasCorrectOutputAndSelectionPositions = (
-  fileName: string,
-  anchorInitialLine: number,
-  anchorInitialChar: number,
-  activeInitialLine: number,
-  activeInitialChar: number,
-  anchorLineDelta: number,
-  anchorCharDelta: number,
-  activeLineDelta: number,
-  activeCharDelta: number
-) => () => {
-  const anchorInitialPos = new vscode.Position(
-    anchorInitialLine,
-    anchorInitialChar
-  )
-  const activeInitialPos = new vscode.Position(
-    activeInitialLine,
-    activeInitialChar
-  )
-
-  const targets: Targets = {
-    anchor: anchorInitialPos.translate(anchorLineDelta, anchorCharDelta),
-    active: activeInitialPos.translate(activeLineDelta, activeCharDelta),
-  }
-
-  before(
-    loadTextAndToggleJsdoc(
-      fileName,
-      targets,
+    getEditor().selection = new vscode.Selection(
       anchorInitialPos,
       activeInitialPos
     )
-  )
 
-  itHasTargetText(targets, fileName)
-  itHasCursorSelectionPosition(targets, fileName)
-}
+    await toggleJSDocComment()
+  }
+
+const itHasCorrectOutputAndSelectionPositions =
+  (
+    fileName: string,
+    anchorInitialLine: number,
+    anchorInitialChar: number,
+    activeInitialLine: number,
+    activeInitialChar: number,
+    anchorLineDelta: number,
+    anchorCharDelta: number,
+    activeLineDelta: number,
+    activeCharDelta: number
+  ) =>
+  () => {
+    const anchorInitialPos = new vscode.Position(
+      anchorInitialLine,
+      anchorInitialChar
+    )
+    const activeInitialPos = new vscode.Position(
+      activeInitialLine,
+      activeInitialChar
+    )
+
+    const targets: Targets = {
+      anchor: anchorInitialPos.translate(anchorLineDelta, anchorCharDelta),
+      active: activeInitialPos.translate(activeLineDelta, activeCharDelta),
+    }
+
+    before(
+      loadTextAndToggleJsdoc(
+        fileName,
+        targets,
+        anchorInitialPos,
+        activeInitialPos
+      )
+    )
+
+    itHasTargetText(targets, fileName)
+    itHasCursorSelectionPosition(targets, fileName)
+  }
 
 const itHasCorrectOutputAndCursorPosition = (
   fileName: string,

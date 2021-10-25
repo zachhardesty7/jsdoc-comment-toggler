@@ -649,9 +649,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
         if (
           getEditor().selection.active.character === 0 ||
-          adjacentChars === "  " ||
-          getEditor().document.lineAt(getEditor().selection.active)
-            .isEmptyOrWhitespace
+          adjacentChars === "  "
         ) {
           // cursor at start of an empty line
           editBuilder.insert(getEditor().selection.active, "/** ")
@@ -682,12 +680,18 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             ``
           )
           editBuilder.insert(getEditor().selection.active, `${indent}/** `)
+
+          const nextChar = adjacentChars[1] ? adjacentChars[1] : ""
           editBuilder.replace(
             new vscode.Range(
               getEditor().selection.active,
               getEditor().selection.active.translate({ characterDelta: 1 })
             ),
-            ` */\n${prevChars}${adjacentChars[1] ? adjacentChars[1] : ""}`
+            // if there non-whitespace chars on the line, move comment to previous line
+            getEditor().document.lineAt(getEditor().selection.active)
+              .isEmptyOrWhitespace
+              ? ` */`
+              : ` */\n${prevChars}${nextChar}`
           )
         }
       }

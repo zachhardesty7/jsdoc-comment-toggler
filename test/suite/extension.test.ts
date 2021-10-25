@@ -249,6 +249,11 @@ describe.only("single line jsdoc comment", () => {
         4
       )
     )
+
+    describe(
+      "when on an indented new line of a block",
+      itHasCorrectOutputAndCursorPosition("singleAddBlock.js", 1, 2, 0, 4)
+    )
   })
 
   describe("converting existing comment", () => {

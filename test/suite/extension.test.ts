@@ -4,12 +4,11 @@
 // examples for naming
 // https://github.com/mochajs/mocha/blob/fd9fe95e2c8f86366fe12d88b76a81d93d5e20be/test/node-unit/serializer.spec.js
 
-import * as fs from "fs"
-import * as assert from "assert"
-import * as path from "path"
-import * as vscode from "vscode"
-import * as Mocha from "mocha"
-// import { log } from "../utils"
+import fs from "fs"
+import assert from "assert"
+import path from "path"
+import vscode from "vscode"
+import Mocha from "mocha"
 import { getEditor, toggleJSDocComment } from "../../src/extension"
 
 const testsFolder = "../../../test/examples/"

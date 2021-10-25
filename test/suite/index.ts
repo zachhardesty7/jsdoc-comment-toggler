@@ -1,9 +1,9 @@
 /* eslint-disable import/no-unresolved, import/extensions */
 
-import * as path from "path"
-import * as Mocha from "mocha"
-import * as glob from "glob"
-import * as vscode from "vscode"
+import path from "path"
+import Mocha from "mocha"
+import glob from "glob"
+import vscode from "vscode"
 import { cyan } from "ansi-colors"
 import { log } from "../utils"
 
@@ -46,7 +46,9 @@ export const run = (
     await new Promise((resolve) => setTimeout(resolve, HALF_SECOND))
 
     // Add files to the test suite
-    files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)))
+    for (const f of files) {
+      mocha.addFile(path.resolve(testsRoot, f))
+    }
 
     console.timeEnd(`${cyan("info")} Time to init all tests`)
 
@@ -58,7 +60,7 @@ export const run = (
       })
     } catch (error) {
       log.error("caught err", error)
-      return cb(error)
+      return cb(error instanceof Error ? error : null)
     }
   })
 }

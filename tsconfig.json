@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "module": "commonjs",
     "target": "es2019",
     "lib": ["ES2019"],
@@ -8,6 +9,5 @@
     "strict": true
   },
   "include": ["src", "test"],
-  // "exclude": ["node_modules", ".vscode-test", "examples"]
   "exclude": ["node_modules", ".vscode-test"]
 }

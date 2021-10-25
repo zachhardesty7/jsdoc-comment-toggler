@@ -1,6 +1,6 @@
 /* eslint-disable import/no-unresolved, import/extensions */
 
-import * as path from "path"
+import path from "path"
 import { cyan } from "ansi-colors"
 
 import { runTests } from "vscode-test"

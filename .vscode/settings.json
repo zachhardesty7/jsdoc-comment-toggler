@@ -1,4 +1,8 @@
 {
+  // magic character to brand edits and adjust selection positions
+  "editor.unicodeHighlight.allowedCharacters": {
+    "​": true,
+  },
   "editor.formatOnSave": true,
   "files.exclude": {
     "out": false // set this to true to hide the "out" folder with the compiled JS files

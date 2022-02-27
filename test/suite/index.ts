@@ -1,9 +1,9 @@
 /* eslint-disable import/no-unresolved, import/extensions */
 
-import path from "path"
-import Mocha from "mocha"
-import glob from "glob"
-import vscode from "vscode"
+import * as path from "path"
+import * as Mocha from "mocha"
+import * as glob from "glob"
+import * as vscode from "vscode"
 import { cyan } from "ansi-colors"
 import { log } from "../utils"
 
@@ -21,6 +21,7 @@ export const run = (
     color: true,
     inlineDiffs: true,
     bail: DEBUG_TESTS,
+    // timeout: 60000,
   })
 
   const scratchpadUri = path.join(

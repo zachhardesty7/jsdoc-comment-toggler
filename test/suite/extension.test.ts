@@ -24,6 +24,17 @@ interface Targets {
   active?: vscode.Position
 }
 
+/**
+ * useful for debugging, must uncomment `timeout: 60000,` in `mocha` constructor in `index.ts`
+ *
+ * @param ms - milliseconds to wait
+ * @returns promise that resolves after `ms` milliseconds
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 // NOTE: async required to keep files from overwriting editor
 const loadFile = async (fileName: string): Promise<string> => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)

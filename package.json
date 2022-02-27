@@ -38,6 +38,8 @@
       }
     ],
     "rules": {
+      "no-unused-vars": "off",
+      "unicorn/import-style": "off",
       "unicorn/prefer-module": "off",
       "unicorn/prefer-node-protocol": "off",
       "max-statements-per-line": "error",

@@ -10,6 +10,9 @@ import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 
 const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
+/** zero width space that essentially brands changes made by this extension */
+const MAGIC_CHARACTER = "​"
+
 // regexes
 const LINE_COMMENT_TAG = "//"
 const BLOCK_COMMENT_START_TAG = "/*"
@@ -139,6 +142,8 @@ export const getIndentation = (line: vscode.TextLine | number): string => {
  * vscode doesn't have the ability to add to line index greater than max
  *
  * @param isSingleLineComment - precalculated
+ * @deprecated - inaccurate results if called _during_ a textEdit. if called _after_, the
+ * cursor movement is noticeable and somewhat slow
  */
 const adjustCursorPos = async (isSingleLineComment: boolean) => {
   const editor = getEditor()
@@ -288,8 +293,21 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     }
   }
 
+  // add hidden text to enable using a replace operation when the cursor is at the end of
+  // the line without altering the selection
+  if (
+    !hasSelection(getEditor()) &&
+    getEditor().selection.end.character === lineLast.range.end.character
+  ) {
+    await getEditor().insertSnippet(
+      new vscode.SnippetString(`$0${MAGIC_CHARACTER}`),
+      getEditor().selection.active,
+      { undoStopAfter: false, undoStopBefore: false }
+    )
+  }
+
   // construct and trigger single batch of changes
-  return editor.edit((editBuilder) => {
+  return getEditor().edit((editBuilder) => {
     // #region - remove single line jsdoc, selection or no selection
     if (
       isSingleLineSelection &&
@@ -398,6 +416,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         blockCommentStartIndex === -1 &&
         blockCommentEndIndex === -1
       ) {
+        log("adding new jsdoc comment to line WITH A SELECTION")
         // selection on line without jsdoc or block/line comment
         editBuilder.insert(editor.selection.start, "/** ")
 
@@ -424,6 +443,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         getEditor().selection.active.character <
           blockCommentEndIndex + BLOCK_COMMENT_END_TAG.length
       ) {
+        log("converting block comment to jsdoc")
         // block comment already exists and active cursor within it
         const firstChar = getEditor().document.getText(
           new vscode.Range(
@@ -518,7 +538,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         lineCommentTag?.index &&
         getEditor().selection.active.character > lineCommentTag.index
       ) {
-        // line comment already exists
+        log("converting line comment to jsdoc")
         const firstChar = getEditor().document.getText(
           new vscode.Range(
             lineFirst.lineNumber,
@@ -546,6 +566,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             ""
           )
         } else if (
+          // line comment nested inside jsdoc
           prevLineText.startsWith(JSDOC_START_TAG) ||
           prevLineText.startsWith(JSDOC_LINE_CHAR) ||
           nextLineText.startsWith(JSDOC_LINE_CHAR) ||
@@ -561,6 +582,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             "*"
           )
         } else if (isLineCommentFullLine) {
+          // REVIEW: could try to standardize by matching before and after cursor with regex here
           editBuilder.replace(
             new vscode.Range(
               lineFirst.lineNumber,
@@ -583,8 +605,11 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             )
           )
 
-          editBuilder.insert(
-            getContentEndPos(lineFirst),
+          editBuilder.replace(
+            new vscode.Range(
+              getContentEndPos(lineFirst),
+              getContentEndPos(lineFirst).translate({ characterDelta: 1 })
+            ),
             `${lastChar && lastChar !== " " ? " " : ""}*/`
           )
         } else {
@@ -638,7 +663,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         }
       } else {
-        // add new jsdoc when no comments & no selection
+        log("adding NEW jsdoc comment when NO SELECTION")
         const adjacentRange = new vscode.Range(
           getEditor().selection.active.line,
           Math.max(getEditor().selection.active.character - 1, 0),
@@ -679,24 +704,27 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             ),
             ``
           )
-          editBuilder.insert(getEditor().selection.active, `${indent}/** `)
+          editBuilder.insert(
+            getEditor().selection.active.with({ character: 0 }),
+            `${indent}/** `
+          )
 
-          const nextChar = adjacentChars[1] ? adjacentChars[1] : ""
+          const nextChar = adjacentChars[1] || ""
           editBuilder.replace(
             new vscode.Range(
               getEditor().selection.active,
               getEditor().selection.active.translate({ characterDelta: 1 })
             ),
             // if there non-whitespace chars on the line, move comment to previous line
-            getEditor().document.lineAt(getEditor().selection.active)
-              .isEmptyOrWhitespace
+            lineActive.isEmptyOrWhitespace ||
+              lineActive.text.includes(MAGIC_CHARACTER)
               ? ` */`
-              : ` */\n${prevChars}${nextChar}`
+              : ` */\n${prevChars}${
+                  nextChar !== MAGIC_CHARACTER ? nextChar : ""
+                }`
           )
         }
       }
-
-      adjustCursorPos(isSingleLineSelection)
 
       return
     }
@@ -708,7 +736,6 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     // target all lines between opening tag exclusive and closing tag inclusive
     for (let i = lineFirst.lineNumber; i <= lineLast.lineNumber; i += 1) {
       const line = getEditor().document.lineAt(i)
-      log("line", line)
       if (line) {
         const contentStart = line.text.slice(
           line.firstNonWhitespaceCharacterIndex
@@ -740,6 +767,21 @@ export const activate = (context: vscode.ExtensionContext): void => {
     "jsdoc-comment-toggler.toggle",
     toggleJSDocComment
   )
+
+  // TODO: investigate possible performance issues with this
+  // when an undo or redo contains our magic character, perform it twice as adding
+  // and removing the magic character is an extra item on the undo stack
+  vscode.workspace.onDidChangeTextDocument((event) => {
+    if (event.contentChanges[0]?.text === MAGIC_CHARACTER) {
+      if (event.reason === vscode.TextDocumentChangeReason.Undo) {
+        vscode.commands.executeCommand("undo")
+      } else if (event.reason === vscode.TextDocumentChangeReason.Redo) {
+        vscode.commands.executeCommand("redo")
+      } else {
+        // ignore undefined event reasons (e.g. typing)
+      }
+    }
+  })
 
   if (DEBUG) {
     vscode.window.showInformationMessage("jsdoc comment toggler loaded")

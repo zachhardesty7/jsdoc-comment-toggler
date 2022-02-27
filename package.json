@@ -1,6 +1,6 @@
 {
   "name": "jsdoc-comment-toggler",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "preview": true,
   "displayName": "jsdoc comment toggler",
   "description": "toggle JSDoc comment on line or selection",

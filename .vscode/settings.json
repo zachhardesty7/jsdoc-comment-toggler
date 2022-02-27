@@ -1,7 +1,7 @@
 {
   // magic character to brand edits and adjust selection positions
   "editor.unicodeHighlight.allowedCharacters": {
-    "​": true,
+    "​": true
   },
   "editor.formatOnSave": true,
   "files.exclude": {
@@ -12,5 +12,5 @@
   },
   "typescript.tsdk": "node_modules\\typescript\\lib",
   // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-  "typescript.tsc.autoDetect": "off",
+  "typescript.tsc.autoDetect": "off"
 }

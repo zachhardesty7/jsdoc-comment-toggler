@@ -518,7 +518,7 @@ describe("remove existing jsdoc", () => {
   describe("when it's alone on a line", () => {
     describe(
       "when cursor's inside",
-      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 20, 0, -4)
+      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 20, 0, -1)
     )
   })
   describe(

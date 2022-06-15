@@ -25,6 +25,17 @@ interface Targets {
   active?: vscode.Position
 }
 
+interface Range {
+  active: {
+    _character: number
+    _line: number
+  }
+  anchor: {
+    _character: number
+    _line: number
+  }
+}
+
 /**
  * useful for debugging, must uncomment `timeout: 60000,` in `mocha` constructor in `index.ts`
  *
@@ -71,7 +82,11 @@ const loadFile = async (fileName: string): Promise<string> => {
   return targetContent
 }
 
-const itHasTargetText = (targets: Targets, fileName: string) => {
+const itHasTargetText = (
+  targets: Targets,
+  fileName: string,
+  initial?: Range
+) => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
 
@@ -89,7 +104,7 @@ const itHasTargetText = (targets: Targets, fileName: string) => {
       assert.strictEqual(
         getEditor().document.getText(),
         content,
-        `output text incorrect
+        `output text incorrect, starting from: ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
         input file: ${startingContentUri}
         target file: ${targetContentUri}`
       )
@@ -105,16 +120,7 @@ const itHasTargetText = (targets: Targets, fileName: string) => {
 const itHasCursorSelectionPosition = (
   targets: Targets,
   fileName: string,
-  initial?: {
-    active: {
-      _character: number
-      _line: number
-    }
-    anchor: {
-      _character: number
-      _line: number
-    }
-  }
+  initial?: Range
 ) => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
@@ -210,8 +216,7 @@ const itHasCorrectOutputAndSelectionPositions =
       )
     )
 
-    itHasTargetText(targets, fileName)
-    itHasCursorSelectionPosition(targets, fileName, {
+    const initialRange: Range = {
       active: {
         _character: activeInitialChar,
         _line: activeInitialLine,
@@ -220,7 +225,10 @@ const itHasCorrectOutputAndSelectionPositions =
         _character: anchorInitialChar,
         _line: anchorInitialLine,
       },
-    })
+    }
+
+    itHasTargetText(targets, fileName, initialRange)
+    itHasCursorSelectionPosition(targets, fileName, initialRange)
   }
 
 const itHasCorrectOutputAndCursorPosition = (

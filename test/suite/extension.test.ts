@@ -10,6 +10,7 @@ import path from "path"
 import vscode from "vscode"
 import Mocha from "mocha"
 import { getEditor, toggleJSDocComment } from "../../src/extension"
+import { getTestedFiles, log } from "../utils"
 
 const testsFolder = "../../../test/examples/"
 const resultsFolder = "../../../test/results/"
@@ -39,6 +40,9 @@ function sleep(ms: number) {
 const loadFile = async (fileName: string): Promise<string> => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
+
+  getTestedFiles().add(startingContentUri)
+  log.info("files tested at this point", [...getTestedFiles()])
 
   const startingContent = fs.readFileSync(startingContentUri, "utf-8")
   const targetContent = fs.readFileSync(targetContentUri, "utf-8")

@@ -48,3 +48,8 @@ log.error = (...messages: unknown[]): void => {
     console.error(red("error"), ...messages) // NOSONAR
   }
 }
+
+const testedFiles = new Set<string>()
+export function getTestedFiles(): Set<string> {
+  return testedFiles
+}

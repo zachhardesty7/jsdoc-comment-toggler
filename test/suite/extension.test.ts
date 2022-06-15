@@ -221,7 +221,7 @@ const itHasCorrectOutputAndCursorPosition = (
   )
 
 // #region - single line tests
-describe.only("single line jsdoc comment", () => {
+describe("single line jsdoc comment", () => {
   // "add new comment op"
   describe("adding new comment", () => {
     describe("when NO selection", () => {
@@ -510,7 +510,7 @@ describe("remove existing jsdoc", () => {
 })
 
 // #region - multiline comments
-describe("multi line jsdoc comment", () => {
+describe.skip("multi line jsdoc comment", () => {
   describe("add", () => {
     describe(
       "selection not before or at end (internal)",

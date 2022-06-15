@@ -102,7 +102,20 @@ const itHasTargetText = (targets: Targets, fileName: string) => {
   })
 }
 
-const itHasCursorSelectionPosition = (targets: Targets, fileName: string) => {
+const itHasCursorSelectionPosition = (
+  targets: Targets,
+  fileName: string,
+  initial?: {
+    active: {
+      _character: number
+      _line: number
+    }
+    anchor: {
+      _character: number
+      _line: number
+    }
+  }
+) => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
 
@@ -128,7 +141,7 @@ const itHasCursorSelectionPosition = (targets: Targets, fileName: string) => {
           anchor,
           active,
         },
-        `cursor and/or selection in incorrect position
+        `cursor and/or selection in incorrect position, starting from: ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
         input file: ${startingContentUri}
         target file: ${targetContentUri}`
       )
@@ -198,7 +211,16 @@ const itHasCorrectOutputAndSelectionPositions =
     )
 
     itHasTargetText(targets, fileName)
-    itHasCursorSelectionPosition(targets, fileName)
+    itHasCursorSelectionPosition(targets, fileName, {
+      active: {
+        _character: activeInitialChar,
+        _line: activeInitialLine,
+      },
+      anchor: {
+        _character: anchorInitialChar,
+        _line: anchorInitialLine,
+      },
+    })
   }
 
 const itHasCorrectOutputAndCursorPosition = (

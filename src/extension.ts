@@ -89,6 +89,39 @@ const getNextLine = (line: vscode.TextLine | number): vscode.TextLine =>
   )
 
 /**
+ * @param position - input
+ * @returns the char before the position or empty string if at start of line
+ */
+function getPrevChar(position: vscode.Position): string {
+  return getEditor().document.getText(
+    new vscode.Range(
+      position.with({ character: Math.max(position.character - 1, 0) }),
+      position
+    )
+  )
+}
+
+/**
+ * @param position - input
+ * @returns the char after the position or empty string if at end of line
+ */
+function getNextChar(position: vscode.Position): string {
+  return getEditor().document.getText(
+    new vscode.Range(
+      position,
+      position.with({ character: position.character + 1 })
+    )
+  )
+}
+
+const nextChar = getEditor().document.getText(
+  new vscode.Range(
+    getEditor().selection.active,
+    getEditor().selection.active.translate({ characterDelta: 1 })
+  )
+)
+
+/**
  * @param editor - vscode's currently active text editor
  * @returns whether any text is currently selected
  */
@@ -664,20 +697,21 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         }
       } else {
         log("adding NEW jsdoc comment when NO SELECTION")
-        const adjacentRange = new vscode.Range(
-          getEditor().selection.active.line,
-          Math.max(getEditor().selection.active.character - 1, 0),
-          getEditor().selection.active.line,
-          getEditor().selection.active.character + 1
-        )
-        const adjacentChars = getEditor().document.getText(adjacentRange)
+
+        const prevChar = getPrevChar(getEditor().selection.active)
+        const nextChar = getNextChar(getEditor().selection.active)
         const isLineBlank =
           lineActive.isEmptyOrWhitespace ||
           lineActive.text.includes(MAGIC_CHARACTER)
 
         if (
-          (getEditor().selection.active.character === 0 && !isLineBlank) ||
-          adjacentChars === "  "
+          (!isLineBlank &&
+            getEditor().selection.active.character ===
+              lineActive.firstNonWhitespaceCharacterIndex) ||
+          (prevChar === " " &&
+            nextChar === " " &&
+            getEditor().selection.active.character >
+              lineActive.firstNonWhitespaceCharacterIndex)
         ) {
           log(
             "add inline jsdoc, cursor at start of non-empty line or has spaces on both sides"
@@ -688,9 +722,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
               getEditor().selection.active,
               getEditor().selection.active.translate({ characterDelta: 1 })
             ),
-            ` */${adjacentChars[0] && adjacentChars[0] !== " " ? " " : ""}${
-              adjacentChars[0] ? adjacentChars[0] : ""
-            }`
+            ` */${nextChar && nextChar !== " " ? " " : ""}${nextChar}`
           )
         } else {
           log(
@@ -716,7 +748,6 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             `${indent}/** `
           )
 
-          const nextChar = adjacentChars[1] || ""
           editBuilder.replace(
             new vscode.Range(
               getEditor().selection.active,

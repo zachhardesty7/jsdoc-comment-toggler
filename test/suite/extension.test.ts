@@ -260,6 +260,14 @@ describe("single line jsdoc comment", () => {
         itHasCorrectOutputAndCursorPosition("singleAddStart.js", 1, 0, 0, 4)
       )
       describe(
+        "when cursor is not at start but right before text",
+        itHasCorrectOutputAndCursorPosition("singleAddStartB.js", 4, 6, 0, 4)
+      )
+      describe(
+        "when cursor is not at start and is 1+ space away from text",
+        itHasCorrectOutputAndCursorPosition("singleAddStartC.js", 4, 0, 0, 10)
+      )
+      describe(
         "when cursor is at end of line",
         itHasCorrectOutputAndCursorPosition("singleAddEnd.js", 0, 24, 0, -20)
       )

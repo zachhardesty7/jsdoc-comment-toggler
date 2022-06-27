@@ -104,7 +104,7 @@ const itHasTargetText = (
       assert.strictEqual(
         getEditor().document.getText(),
         content,
-        `output text incorrect, starting from: ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
+        `output text incorrect, selection from ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
         input file: ${startingContentUri}
         target file: ${targetContentUri}`
       )
@@ -147,7 +147,7 @@ const itHasCursorSelectionPosition = (
           anchor,
           active,
         },
-        `cursor and/or selection in incorrect position, starting from: ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
+        `cursor and/or selection in incorrect position, selection from ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
         input file: ${startingContentUri}
         target file: ${targetContentUri}`
       )
@@ -255,6 +255,10 @@ describe("single line jsdoc comment", () => {
   // "add new comment op"
   describe("adding new comment", () => {
     describe("when NO selection", () => {
+      describe(
+        "when cursor is at start of an empty line",
+        itHasCorrectOutputAndCursorPosition("singleAddAbove.js", 0, 0, 0, 4)
+      )
       describe(
         "when cursor is at start of line",
         itHasCorrectOutputAndCursorPosition("singleAddStart.js", 1, 0, 0, 4)

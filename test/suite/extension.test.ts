@@ -90,10 +90,6 @@ const itHasTargetText = (
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
 
-  Error.stackTraceLimit = 25 // NOTE: may need adjustment
-  const stack: { stack: string } = { stack: "" }
-  Error.captureStackTrace(stack)
-
   it("has the expected text output", () => {
     try {
       const { content } = targets
@@ -110,7 +106,7 @@ const itHasTargetText = (
       )
     } catch (error) {
       if (error instanceof Error) {
-        error.stack = stack.stack
+        error.stack = "" // hide useless info from Mocha test internals
       }
       throw error
     }

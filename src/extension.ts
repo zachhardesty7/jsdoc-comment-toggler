@@ -671,12 +671,17 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           getEditor().selection.active.character + 1
         )
         const adjacentChars = getEditor().document.getText(adjacentRange)
+        const isLineBlank =
+          lineActive.isEmptyOrWhitespace ||
+          lineActive.text.includes(MAGIC_CHARACTER)
 
         if (
-          getEditor().selection.active.character === 0 ||
+          (getEditor().selection.active.character === 0 && !isLineBlank) ||
           adjacentChars === "  "
         ) {
-          // cursor at start of an empty line
+          log(
+            "add inline jsdoc, cursor at start of non-empty line or has spaces on both sides"
+          )
           editBuilder.insert(getEditor().selection.active, "/** ")
           editBuilder.replace(
             new vscode.Range(
@@ -688,7 +693,9 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             }`
           )
         } else {
-          // cursor somewhere in middle or at end of line
+          log(
+            "add jsdoc on prev line, cursor somewhere in middle, or at end of line, or at start of blank line"
+          )
           const indent = getIndentation(lineFirst)
           const prevChars = getEditor().document.getText(
             new vscode.Range(
@@ -715,9 +722,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
               getEditor().selection.active,
               getEditor().selection.active.translate({ characterDelta: 1 })
             ),
-            // if there non-whitespace chars on the line, move comment to previous line
-            lineActive.isEmptyOrWhitespace ||
-              lineActive.text.includes(MAGIC_CHARACTER)
+            // if there are non-whitespace chars on the line, move comment to previous line
+            isLineBlank
               ? ` */`
               : ` */\n${prevChars}${
                   nextChar !== MAGIC_CHARACTER ? nextChar : ""

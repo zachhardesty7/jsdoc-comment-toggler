@@ -21,7 +21,7 @@ export const run = (
     color: true,
     inlineDiffs: true,
     bail: DEBUG_TESTS,
-    // timeout: 60000,
+    timeout: 8000,
   })
 
   const scratchpadUri = path.join(

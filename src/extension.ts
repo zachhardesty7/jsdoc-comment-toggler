@@ -74,19 +74,30 @@ const setCursorSelection = (selection: vscode.Selection) => {
  * @param line - input
  * @returns the line directly proceeding the input
  */
-const getPrevLine = (line: vscode.TextLine | number): vscode.TextLine =>
-  getEditor().document.lineAt(
-    (typeof line !== "number" ? line.lineNumber : line) - 1
-  )
+function getPrevLine(
+  line: vscode.TextLine | number
+): vscode.TextLine | undefined {
+  const lineNumber = typeof line === "number" ? line : line.lineNumber
+
+  return lineNumber <= 0
+    ? undefined
+    : getEditor().document.lineAt(lineNumber - 1)
+}
 
 /**
  * @param line - input
  * @returns the line directly following the input
  */
-const getNextLine = (line: vscode.TextLine | number): vscode.TextLine =>
-  getEditor().document.lineAt(
-    (typeof line === "number" ? line : line.lineNumber) + 1
-  )
+function getNextLine(
+  line: vscode.TextLine | number
+): vscode.TextLine | undefined {
+  const lineNumber = typeof line === "number" ? line : line.lineNumber
+  const lastLineNumber = getEditor().document.lineCount - 1
+
+  return lineNumber >= lastLineNumber
+    ? undefined
+    : getEditor().document.lineAt(lineNumber + 1)
+}
 
 /**
  * @param position - input
@@ -286,7 +297,9 @@ const adjustCursorPos = async (isSingleLineComment: boolean) => {
 export const toggleJSDocComment = async (): Promise<boolean> => {
   const editor = getEditor()
 
+  /** within selection */
   let lineFirst = editor.document.lineAt(editor.selection.start.line)
+  /** within selection */
   let lineLast = editor.document.lineAt(editor.selection.end.line)
   const lineActive = editor.document.lineAt(editor.selection.active.line)
   const lineAnchor = editor.document.lineAt(editor.selection.anchor.line)
@@ -305,8 +318,9 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     lineAnchor.text.trim().startsWith(JSDOC_LINE_CHAR)
   if (isJsdoc && !jsdocStart && lineFirst.lineNumber !== 0) {
     const lineBefore = getPrevLine(lineFirst)
-    const jsdocMatch = lineBefore.text.match(JSDOC_START_REGEX)
-    if (jsdocMatch) {
+    const jsdocMatch = lineBefore?.text.match(JSDOC_START_REGEX)
+
+    if (lineBefore && jsdocMatch) {
       lineFirst = lineBefore
       jsdocStart = jsdocMatch
     }
@@ -319,8 +333,9 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     lineLast.lineNumber !== editor.document.lineCount - 1
   ) {
     const lineAfter = getNextLine(lineLast)
-    const jsdocMatch = lineAfter.text.match(JSDOC_END_REGEX)
-    if (jsdocMatch) {
+    const jsdocMatch = lineAfter?.text.match(JSDOC_END_REGEX)
+
+    if (lineAfter && jsdocMatch) {
       lineLast = lineAfter
       jsdocEnd = jsdocMatch
     }
@@ -570,7 +585,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         }
       } else if (
-        lineCommentTag?.index &&
+        lineCommentTag?.index !== undefined &&
         getEditor().selection.active.character > lineCommentTag.index
       ) {
         log("converting line comment to jsdoc")
@@ -587,8 +602,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         )
 
         const indent = getIndentation(lineFirst)
-        const prevLineText = getPrevLine(lineFirst).text.trim()
-        const nextLineText = getNextLine(lineFirst).text.trim()
+        const prevLineText = getPrevLine(lineFirst)?.text.trim()
+        const nextLineText = getNextLine(lineFirst)?.text.trim()
         // already starts with a star
         if (lineFirst.text.trim().startsWith(JSDOC_LINE_CHAR)) {
           editBuilder.replace(
@@ -602,10 +617,10 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         } else if (
           // line comment nested inside jsdoc
-          prevLineText.startsWith(JSDOC_START_TAG) ||
-          prevLineText.startsWith(JSDOC_LINE_CHAR) ||
-          nextLineText.startsWith(JSDOC_LINE_CHAR) ||
-          nextLineText.startsWith(JSDOC_END_TAG)
+          prevLineText?.startsWith(JSDOC_START_TAG) ||
+          prevLineText?.startsWith(JSDOC_LINE_CHAR) ||
+          nextLineText?.startsWith(JSDOC_LINE_CHAR) ||
+          nextLineText?.startsWith(JSDOC_END_TAG)
         ) {
           editBuilder.replace(
             new vscode.Range(

@@ -176,6 +176,7 @@ const loadTextAndToggleJsdoc =
     await toggleJSDocComment()
   }
 
+/** line and char should be 1 less than VSCode shows */
 const itHasCorrectOutputAndSelectionPositions =
   (
     fileName: string,
@@ -227,6 +228,7 @@ const itHasCorrectOutputAndSelectionPositions =
     itHasCursorSelectionPosition(targets, fileName, initialRange)
   }
 
+/** line and char should be 1 less than VSCode shows */
 const itHasCorrectOutputAndCursorPosition = (
   fileName: string,
   cursorInitialLine: number,
@@ -380,6 +382,80 @@ describe("single line jsdoc comment", () => {
               "singleConvertLine.js",
               2,
               28,
+              0,
+              1
+            )
+          )
+        })
+        describe.skip("when selection", () => {
+          /* TODO: implement */
+        })
+      })
+
+      describe("when it's at start of a line", () => {
+        describe("when NO selection", () => {
+          describe(
+            "when cursor's inside",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineStart.js",
+              0,
+              10,
+              0,
+              1
+            )
+          )
+
+          // TODO: needs new file
+          describe.skip(
+            "when cursor is before comment",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineStart.js",
+              2,
+              1,
+              0,
+              4
+            )
+          )
+
+          describe(
+            "when cursor is inside comment tag",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineStart.js",
+              0,
+              1,
+              0,
+              2
+            )
+          )
+
+          describe(
+            "when cursor is just after comment tag before a space",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineStart.js",
+              0,
+              2,
+              0,
+              1
+            )
+          )
+
+          describe(
+            "when cursor is just after space after comment tag",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineStart.js",
+              0,
+              3,
+              0,
+              1
+            )
+          )
+
+          describe(
+            "when cursor is at end of line comment",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineStart.js",
+              0,
+              25,
               0,
               1
             )

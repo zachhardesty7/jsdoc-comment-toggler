@@ -290,6 +290,7 @@ describe("single line jsdoc comment", () => {
       )
     })
 
+    // TODO: improve weak example
     describe(
       "when selection exists within interior of line",
       itHasCorrectOutputAndSelectionPositions(
@@ -298,6 +299,22 @@ describe("single line jsdoc comment", () => {
         21,
         0,
         32,
+        0,
+        4,
+        0,
+        4
+      )
+    )
+
+    // TODO: improve weak example
+    describe(
+      "when selection ends at end of line",
+      itHasCorrectOutputAndSelectionPositions(
+        "singleAddSelectionEnd.js",
+        0,
+        19,
+        0,
+        24,
         0,
         4,
         0,

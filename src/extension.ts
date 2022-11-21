@@ -327,8 +327,10 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   }
 
   // add hidden text to enable using a replace operation when the cursor is at the end of
-  // the line without altering the selection
+  // the line without altering the cursor position
   if (
+    jsdocStart?.index === undefined &&
+    jsdocEnd?.index === undefined &&
     !hasSelection(getEditor()) &&
     getEditor().selection.end.character === lineLast.range.end.character
   ) {
@@ -355,7 +357,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     ) {
       log("removing single line jsdoc")
 
-      // internal
+      // trailing
       if (
         jsdocEnd.index + jsdocEnd[0].length ===
         getContentEndPos(lineLast).character
@@ -378,7 +380,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         )
       } else {
-        // trailing
+        // internal
         editBuilder.replace(
           new vscode.Range(
             lineFirst.lineNumber,

@@ -363,14 +363,14 @@ describe("single line jsdoc comment", () => {
           )
 
           // TODO: needs new file
-          describe.skip(
+          describe(
             "when cursor is before comment",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLine.js",
               2,
-              1,
               0,
-              4
+              0,
+              0
             )
           )
 
@@ -574,6 +574,21 @@ describe("single line jsdoc comment", () => {
           1
         )
       )
+      describe(
+        "when it's alone on a line & cursor before it",
+        itHasCorrectOutputAndCursorPosition("singleConvertBlock.js", 1, 0, 0, 0)
+      )
+      describe(
+        "when it's alone on a line & cursor after it",
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlock.js",
+          1,
+          30,
+          0,
+          1
+        )
+      )
+
       describe(
         "when it's internal & surrounded by code",
         itHasCorrectOutputAndCursorPosition(

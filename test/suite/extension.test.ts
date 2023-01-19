@@ -288,6 +288,10 @@ describe("single line jsdoc comment", () => {
           -14
         )
       )
+      describe(
+        "when cursor is on an indented new line of a block",
+        itHasCorrectOutputAndCursorPosition("singleAddBlock.js", 1, 2, 0, 4)
+      )
     })
 
     // TODO: improve weak example
@@ -323,8 +327,18 @@ describe("single line jsdoc comment", () => {
     )
 
     describe(
-      "when on an indented new line of a block",
-      itHasCorrectOutputAndCursorPosition("singleAddBlock.js", 1, 2, 0, 4)
+      "when selection is all of the text and indented",
+      itHasCorrectOutputAndSelectionPositions(
+        "singleAddIndentSelection.js",
+        1,
+        2,
+        1,
+        24,
+        0,
+        4,
+        0,
+        4
+      )
     )
   })
 

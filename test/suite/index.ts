@@ -5,11 +5,9 @@ import Mocha from "mocha"
 import glob from "glob"
 import vscode from "vscode"
 import { cyan } from "ansi-colors"
-import { log } from "../utils"
+import { DEBUG_TESTS, getTestedFiles, log } from "../utils"
 
 import "source-map-support/register"
-
-const DEBUG_TESTS = process.env.DEBUG_TESTS === "true"
 
 export const run = (
   testsRoot: string,
@@ -57,6 +55,11 @@ export const run = (
       // Run the mocha test
       return mocha.run((failures) => {
         log.error(`${failures} tests failed`)
+
+        if (DEBUG_TESTS) {
+          log.info("files tested at this point", [...getTestedFiles()])
+        }
+
         cb(null, failures)
       })
     } catch (error) {

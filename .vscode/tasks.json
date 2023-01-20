@@ -5,7 +5,35 @@
   "tasks": [
     {
       "type": "npm",
+      "script": "compile-launch",
+      "label": "NPM: compile launch",
+      "problemMatcher": "$tsc",
+      "presentation": {
+        "close": true,
+        "revealProblems": "onProblem",
+        "reveal": "never"
+      },
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "compile",
+      "label": "NPM: compile",
+      "problemMatcher": "$tsc",
+      // "presentation": {
+      //   "reveal": "never"
+      // },
+      "group": {
+        "kind": "build"
+        // "isDefault": true
+      }
+    },
+    {
+      "type": "npm",
       "script": "watch",
+      // "label": "NPM: watch",
       "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {
@@ -26,7 +54,7 @@
         "reveal": "never"
       },
       "group": {
-        "kind": "build",
+        "kind": "build"
         // "isDefault": true
       }
     },

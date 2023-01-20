@@ -11,48 +11,17 @@
   },
   "eslintConfig": {
     "root": true,
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ],
     "extends": [
-      "plugin:@typescript-eslint/recommended",
-      "hardesty/prettier"
+      "hardesty",
+      "hardesty/typescript"
     ],
     "env": {
       "mocha": true,
       "webextensions": true
     },
     "ignorePatterns": "*.js",
-    "overrides": [
-      {
-        "files": [
-          "*.ts",
-          "*.tsx"
-        ],
-        "rules": {
-          "curly": "error",
-          "jsdoc/require-param-type": "off",
-          "jsdoc/require-returns-type": "off"
-        }
-      }
-    ],
     "rules": {
-      "no-unused-vars": "off",
-      "unicorn/import-style": "off",
-      "unicorn/prefer-module": "off",
-      "unicorn/prefer-node-protocol": "off",
-      "max-statements-per-line": "error",
-      "curly": [
-        "error",
-        "all"
-      ],
-      "promise/catch-or-return": "off",
-      "@typescript-eslint/no-extra-semi": "off",
-      "@typescript-eslint/no-unused-vars": "error",
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/explicit-module-boundary-types": "error",
-      "@typescript-eslint/no-non-null-assertion": "error"
+      "unicorn/import-style": "off"
     }
   },
   "prettier": {
@@ -97,6 +66,7 @@
   "scripts": {
     "clean": "rm -rf ./out",
     "compile": "tsc -p ./",
+    "compile-launch": "tsc -p ./",
     "lint": "eslint . --ext .ts,.tsx",
     "watch": "tsc -watch -p ./",
     "_pack": "vsce package",
@@ -110,12 +80,10 @@
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.11.4",
     "@types/vscode": "^1.61.0",
-    "@typescript-eslint/eslint-plugin": "^5.1.0",
-    "@typescript-eslint/parser": "^5.1.0",
     "ansi-colors": "^4.1.1",
     "dotenv": "^10.0.0",
     "eslint": "^8.1.0",
-    "eslint-config-hardesty": "^5.0.3",
+    "eslint-config-hardesty": "^6.1.1",
     "glob": "^7.2.0",
     "mocha": "^9.1.3",
     "npm-run-all": "^4.1.5",

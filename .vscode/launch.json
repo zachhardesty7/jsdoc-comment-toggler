@@ -9,79 +9,50 @@
       // REVIEW: usually does not launch vscode on Windows
       // https://github.com/Microsoft/vscode/issues/55620
       // https://github.com/microsoft/TypeScript/issues/32086
-      "name": "Run Extension w Watch",
+      "name": "Extension w Watch",
       "type": "extensionHost",
       "request": "launch",
-      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "DEBUG_EXTENSION_ENTRY": "true",
+        "DEBUG_EXTENSION": "true"
+      },
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
       "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "${defaultBuildTask}"
+      // "preLaunchTask": "NPM: watch"
+      "preLaunchTask": "npm: watch"
     },
     {
-      "name": "Run Extension",
-      "envFile": "${workspaceFolder}/.env",
+      "name": "Extension",
+      "env": {
+        "DEBUG_EXTENSION_ENTRY": "true",
+        "DEBUG_EXTENSION": "true"
+      },
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": [
-        // "--disable-extensions",
-        "--extensionDevelopmentPath=${workspaceFolder}"
-      ],
-      "outFiles": ["${workspaceFolder}/out/**/*.js"]
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "preLaunchTask": "NPM: compile launch"
     },
-    // {
-    //   "args": [
-    //     "-u",
-    //     "bdd",
-    //     "--timeout",
-    //     "999999",
-    //     "--colors",
-    //     "${workspaceFolder}/out/test"
-    //   ],
-    //   "internalConsoleOptions": "openOnSessionStart",
-    //   "name": "Mocha Tests",
-    //   "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-    //   "request": "launch",
-    //   "skipFiles": ["<node_internals>/**"],
-    //   "type": "pwa-node"
-    // },
     {
-      "name": "Launch Program",
-      "program": "${workspaceFolder}/out/test/runTest.js",
-      "envFile": "${workspaceFolder}/.env",
-      "request": "launch",
-      "trace": true,
-      // "stopOnEntry": true,
-      "sourceMaps": true,
-      // "outFiles": ["${workspaceFolder}/out/**/*.js", "!**/node_modules/**"],
-      // "smartStep": true,
-      // "showAsyncStacks": true,
-      "autoAttachChildProcesses": true,
-      "skipFiles": ["<node_internals>/**"],
-      // "console": "integratedTerminal",
-      "preLaunchTask": "yarn compile",
-      "type": "pwa-node"
-    },
-    // {
-    //   "command": "yarn test",
-    //   "name": "Run yarn test",
-    //   "request": "launch",
-    //   "type": "node-terminal"
-    // },
-    {
-      "name": "Extension Tests",
-      "envFile": "${workspaceFolder}/.env",
-      "type": "pwa-extensionHost",
+      "name": "Tests exec",
+      // "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "DEBUG_EXTENSION": "true",
+        "VERBOSE_TESTS": "true",
+        "DEBUG_TESTS": "true"
+      },
+      "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
+      "envFile": "${workspaceFolder}/.env",
       "args": [
-        "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
         "--extensionTestsPath=${workspaceFolder}/out/test/suite"
       ],
-      "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "yarn compile"
+      "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
+      "preLaunchTask": "NPM: compile"
     }
   ]
 }

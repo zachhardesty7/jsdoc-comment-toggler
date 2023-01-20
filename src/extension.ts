@@ -100,6 +100,13 @@ function getNextLine(
 }
 
 /**
+ * @returns the last line of the current selection
+ */
+function getSelectionLastLine(): vscode.TextLine {
+  return getEditor().document.lineAt(getEditor().selection.end.line)
+}
+
+/**
  * @param position - input
  * @returns the char before the position or empty string if at start of line
  */
@@ -124,13 +131,6 @@ function getNextChar(position: vscode.Position): string {
     )
   )
 }
-
-const nextChar = getEditor().document.getText(
-  new vscode.Range(
-    getEditor().selection.active,
-    getEditor().selection.active.translate({ characterDelta: 1 })
-  )
-)
 
 /**
  * @param editor - vscode's currently active text editor
@@ -297,9 +297,9 @@ const adjustCursorPos = async (isSingleLineComment: boolean) => {
 export const toggleJSDocComment = async (): Promise<boolean> => {
   const editor = getEditor()
 
-  /** within selection */
+  /** within selection, not live */
   let lineFirst = editor.document.lineAt(editor.selection.start.line)
-  /** within selection */
+  /** within selection, not live */
   let lineLast = editor.document.lineAt(editor.selection.end.line)
   const lineActive = editor.document.lineAt(editor.selection.active.line)
   const lineAnchor = editor.document.lineAt(editor.selection.anchor.line)
@@ -326,7 +326,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     }
   }
 
-  // use end tag on prev line if it exists
+  // use end tag on next line if it exists
+  // TODO: use a separate var to store the start and end line of comments
   if (
     isJsdoc &&
     !jsdocEnd &&
@@ -346,14 +347,24 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   if (
     jsdocStart?.index === undefined &&
     jsdocEnd?.index === undefined &&
-    !hasSelection(getEditor()) &&
-    getEditor().selection.end.character === lineLast.range.end.character
+    getEditor().selection.end.character ===
+      getSelectionLastLine().range.end.character
   ) {
+    const originalSelection = new vscode.Selection(
+      getEditor().selection.anchor,
+      getEditor().selection.active
+    )
+
     await getEditor().insertSnippet(
       new vscode.SnippetString(`$0${MAGIC_CHARACTER}`),
-      getEditor().selection.active,
+      getEditor().selection.end,
       { undoStopAfter: false, undoStopBefore: false }
     )
+
+    // insert snippet removes the current selection, so restore it
+    if (!getEditor().selection.isEqual(originalSelection)) {
+      setCursorSelection(originalSelection)
+    }
   }
 
   // construct and trigger single batch of changes
@@ -467,24 +478,17 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         blockCommentEndIndex === -1
       ) {
         log("adding new jsdoc comment to line WITH A SELECTION")
-        // selection on line without jsdoc or block/line comment
+
         editBuilder.insert(editor.selection.start, "/** ")
 
-        // if there's another character after selection, grab position to build bigger range
-        let nextPosition = getEditor().selection.end
-        if (!getContentEndPos(lineLast).isEqual(getEditor().selection.end)) {
-          nextPosition = nextPosition.translate({ characterDelta: 1 })
-        }
-        // could be a range w/ same end as beginning if selection at end of line
-        const nextCharRange = new vscode.Range(
-          getEditor().selection.end,
-          nextPosition
-        )
+        const nextChar = getNextChar(getEditor().selection.end)
 
-        // put jsdoc after next char but shuffle next char to after jsdoc
         editBuilder.replace(
-          nextCharRange,
-          ` */${getEditor().document.getText(nextCharRange)}`
+          new vscode.Range(
+            getEditor().selection.end,
+            getEditor().selection.end.translate({ characterDelta: 1 })
+          ),
+          ` */${nextChar !== MAGIC_CHARACTER ? nextChar : ""}`
         )
       } else if (
         blockCommentStartIndex > -1 &&

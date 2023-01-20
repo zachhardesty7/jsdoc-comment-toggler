@@ -339,6 +339,20 @@ describe("single line jsdoc comment", () => {
         4
       )
     )
+    describe(
+      "when reversed selection is all of the text and indented",
+      itHasCorrectOutputAndSelectionPositions(
+        "singleAddIndentSelection.js",
+        1,
+        24,
+        1,
+        2,
+        0,
+        4,
+        0,
+        4
+      )
+    )
   })
 
   describe("converting existing comment", () => {
@@ -669,6 +683,20 @@ describe("remove existing jsdoc", () => {
   describe(
     "when it's unspaced",
     itHasCorrectOutputAndCursorPosition("singleRemoveUnspaced.js", 1, 12, 0, 0)
+  )
+  describe(
+    "when the whole line is selected from end to start",
+    itHasCorrectOutputAndSelectionPositions(
+      "singleRemoveUnspaced.js",
+      1,
+      31,
+      1,
+      0,
+      0,
+      -3,
+      0,
+      0
+    )
   )
 })
 

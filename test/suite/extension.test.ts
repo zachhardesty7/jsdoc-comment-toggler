@@ -37,7 +37,8 @@ interface Range {
 }
 
 /**
- * useful for debugging, must uncomment `timeout: 60000,` in `mocha` constructor in `index.ts`
+ * useful for debugging, must uncomment `timeout: 60000,` in `mocha` constructor
+ * in `index.ts`
  *
  * @param ms - milliseconds to wait
  * @returns promise that resolves after `ms` milliseconds
@@ -84,7 +85,7 @@ const loadFile = async (fileName: string): Promise<string> => {
 const itHasTargetText = (
   targets: Targets,
   fileName: string,
-  initial?: Range
+  initial: Range
 ) => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
@@ -99,7 +100,11 @@ const itHasTargetText = (
       assert.strictEqual(
         getEditor().document.getText(),
         content,
-        `output text incorrect, selection from ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
+        `output text incorrect, initial selection from ${
+          initial.anchor._line + 1
+        }:${initial.anchor._character + 1} to ${initial.active._line + 1}:${
+          initial.active._character + 1
+        }
         input file: ${startingContentUri}
         target file: ${targetContentUri}`
       )
@@ -115,7 +120,7 @@ const itHasTargetText = (
 const itHasCursorSelectionPosition = (
   targets: Targets,
   fileName: string,
-  initial?: Range
+  initial: Range
 ) => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
@@ -142,7 +147,11 @@ const itHasCursorSelectionPosition = (
           anchor,
           active,
         },
-        `cursor and/or selection in incorrect position, selection from ${initial?.anchor._line}:${initial?.anchor._character} to ${initial?.active._line}:${initial?.active._character}
+        `cursor and/or selection in incorrect position, initial selection from ${
+          initial.anchor._line + 1
+        }:${initial.anchor._character + 1} to ${initial.active._line + 1}:${
+          initial.active._character + 1
+        }
         input file: ${startingContentUri}
         target file: ${targetContentUri}`
       )
@@ -767,29 +776,20 @@ describe.skip("multi line jsdoc comment", () => {
     )
 
     // REVIEW: not sure this makes sense
-    describe("selection is before first non-whitespace char", () => {
-      const activeInitialPos = new vscode.Position(1, 1)
-      const anchorInitialPos = new vscode.Position(2, 9)
-
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(1, 1),
-        active: new vscode.Position(2, 5), // FIXME: hardcoded
-      }
-
-      const fileName = "multiConvertLine.js"
-
-      before(
-        loadTextAndToggleJsdoc(
-          fileName,
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+    describe(
+      "selection is before first non-whitespace char",
+      itHasCorrectOutputAndSelectionPositions(
+        "multiConvertLine.js",
+        2,
+        9,
+        1,
+        1,
+        1,
+        1,
+        1,
+        4
       )
-
-      itHasTargetText(targets, fileName)
-      itHasCursorSelectionPosition(targets, fileName)
-    })
+    )
 
     describe(
       "selection is at end",
@@ -808,33 +808,23 @@ describe.skip("multi line jsdoc comment", () => {
   })
 
   describe("remove", () => {
-    describe("all lines, including open and close tags, are selected", () => {
-      const anchorInitialPos = new vscode.Position(4, 5)
-      const activeInitialPos = new vscode.Position(1, 2)
-
-      const targets: Targets = {
-        anchor: anchorInitialPos.translate(-2).with({ character: 13 }),
-        active: activeInitialPos.with({ character: 0 }),
-      }
-
-      const fileName = "multiRemove.js"
-
-      before(
-        loadTextAndToggleJsdoc(
-          fileName,
-          targets,
-          anchorInitialPos,
-          activeInitialPos
-        )
+    describe(
+      "all lines, including open and close tags, are selected",
+      itHasCorrectOutputAndSelectionPositions(
+        "multiRemove.js",
+        4,
+        5,
+        1,
+        2,
+        -2,
+        8,
+        0,
+        -2
       )
-
-      itHasTargetText(targets, fileName)
-      itHasCursorSelectionPosition(targets, fileName)
-    })
+    )
 
     describe(
       "neither the start nor end tags' lines are within selection",
-
       itHasCorrectOutputAndSelectionPositions(
         "multiConvertLine.js",
         3,

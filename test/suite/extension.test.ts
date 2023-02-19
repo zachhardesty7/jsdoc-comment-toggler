@@ -698,7 +698,7 @@ describe("remove existing jsdoc", () => {
     itHasCorrectOutputAndSelectionPositions(
       "singleRemoveUnspaced.js",
       1,
-      31,
+      29,
       1,
       0,
       0,

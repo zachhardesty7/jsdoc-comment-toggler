@@ -466,13 +466,13 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
     // #region - no jsdoc exists but possibly block or line comment
     if (isSingleLineSelection) {
-      const lineCommentTag = lineFirst.text.match(LINE_COMMENT_TAG)
+      const lineCommentIndex = lineFirst.text.indexOf(LINE_COMMENT_TAG)
       const blockCommentStartIndex = lineFirst.text.indexOf(
         BLOCK_COMMENT_START_TAG
       )
       const blockCommentEndIndex = lineFirst.text.indexOf(BLOCK_COMMENT_END_TAG)
       const isLineCommentFullLine =
-        lineFirst.firstNonWhitespaceCharacterIndex === lineCommentTag?.index
+        lineFirst.firstNonWhitespaceCharacterIndex === lineCommentIndex
       const isBlockCommentTrailing =
         lineFirst.firstNonWhitespaceCharacterIndex !== blockCommentStartIndex &&
         (lineFirst.text.length - BLOCK_COMMENT_END_TAG.length ===
@@ -484,7 +484,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         hasSelection(editor) &&
         !jsdocStart?.index &&
         !jsdocEnd?.index &&
-        !lineCommentTag?.index &&
+        lineCommentIndex === -1 &&
         blockCommentStartIndex === -1 &&
         blockCommentEndIndex === -1
       ) {
@@ -600,8 +600,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         }
       } else if (
-        lineCommentTag?.index !== undefined &&
-        editor.selection.active.character > lineCommentTag.index
+        lineCommentIndex > -1 &&
+        editor.selection.active.character > lineCommentIndex
       ) {
         log("converting line comment to jsdoc")
         const firstChar = editor.document.getText(
@@ -624,9 +624,9 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           editBuilder.replace(
             new vscode.Range(
               lineFirst.lineNumber,
-              lineCommentTag.index,
+              lineCommentIndex,
               lineFirst.lineNumber,
-              lineCommentTag.index + lineCommentTag[0].length
+              lineCommentIndex + LINE_COMMENT_TAG.length
             ),
             ""
           )
@@ -640,9 +640,9 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           editBuilder.replace(
             new vscode.Range(
               lineFirst.lineNumber,
-              lineCommentTag.index,
+              lineCommentIndex,
               lineFirst.lineNumber,
-              lineCommentTag.index + lineCommentTag[0].length
+              lineCommentIndex + LINE_COMMENT_TAG.length
             ),
             "*"
           )
@@ -683,7 +683,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             .getText(
               new vscode.Range(
                 getContentStartPos(lineFirst),
-                new vscode.Position(lineFirst.lineNumber, lineCommentTag.index)
+                new vscode.Position(lineFirst.lineNumber, lineCommentIndex)
               )
             )
             .trim()
@@ -693,7 +693,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
               new vscode.Range(
                 new vscode.Position(
                   lineFirst.lineNumber,
-                  lineCommentTag.index + LINE_COMMENT_TAG.length
+                  lineCommentIndex + LINE_COMMENT_TAG.length
                 ),
                 editor.selection.active
               )

@@ -49,26 +49,24 @@ export const getEditor = (): vscode.TextEditor => {
 }
 
 const setCursorSelection = (selection: vscode.Selection) => {
-  if (!getEditor().selection.active.isEqual(selection.active)) {
+  const editor = getEditor()
+
+  if (!editor.selection.active.isEqual(selection.active)) {
     log(
-      `adjusting cursor: [${getEditor().selection.active.line}, ${
-        getEditor().selection.active.character
-      }] => [${selection.active.line}, ${selection.active.character}]`
+      `adjusting cursor: [${editor.selection.active.line}, ${editor.selection.active.character}] => [${selection.active.line}, ${selection.active.character}]`
     )
   }
 
   if (
-    hasSelection(getEditor()) &&
-    !getEditor().selection.anchor.isEqual(selection.anchor)
+    hasSelection(editor) &&
+    !editor.selection.anchor.isEqual(selection.anchor)
   ) {
     log(
-      `adjusting anchor: [${getEditor().selection.anchor.line}, ${
-        getEditor().selection.anchor.character
-      }] => [${selection.anchor.line}, ${selection.anchor.character}]`
+      `adjusting anchor: [${editor.selection.anchor.line}, ${editor.selection.anchor.character}] => [${selection.anchor.line}, ${selection.anchor.character}]`
     )
   }
 
-  getEditor().selection = selection
+  editor.selection = selection
 }
 
 /**
@@ -78,11 +76,10 @@ const setCursorSelection = (selection: vscode.Selection) => {
 function getPrevLine(
   line: vscode.TextLine | number
 ): vscode.TextLine | undefined {
+  const editor = getEditor()
   const lineNumber = typeof line === "number" ? line : line.lineNumber
 
-  return lineNumber <= 0
-    ? undefined
-    : getEditor().document.lineAt(lineNumber - 1)
+  return lineNumber <= 0 ? undefined : editor.document.lineAt(lineNumber - 1)
 }
 
 /**
@@ -92,17 +89,20 @@ function getPrevLine(
 function getNextLine(
   line: vscode.TextLine | number
 ): vscode.TextLine | undefined {
+  const editor = getEditor()
   const lineNumber = typeof line === "number" ? line : line.lineNumber
-  const lastLineNumber = getEditor().document.lineCount - 1
+  const lastLineNumber = editor.document.lineCount - 1
 
   return lineNumber >= lastLineNumber
     ? undefined
-    : getEditor().document.lineAt(lineNumber + 1)
+    : editor.document.lineAt(lineNumber + 1)
 }
 
 /** @returns the last line of the current selection */
 function getSelectionLastLine(): vscode.TextLine {
-  return getEditor().document.lineAt(getEditor().selection.end.line)
+  const editor = getEditor()
+
+  return editor.document.lineAt(editor.selection.end.line)
 }
 
 /**
@@ -110,7 +110,9 @@ function getSelectionLastLine(): vscode.TextLine {
  * @returns the char before the position or empty string if at start of line
  */
 function getPrevChar(position: vscode.Position): string {
-  return getEditor().document.getText(
+  const editor = getEditor()
+
+  return editor.document.getText(
     new vscode.Range(
       position.with({ character: Math.max(position.character - 1, 0) }),
       position
@@ -123,7 +125,9 @@ function getPrevChar(position: vscode.Position): string {
  * @returns the char after the position or empty string if at end of line
  */
 function getNextChar(position: vscode.Position): string {
-  return getEditor().document.getText(
+  const editor = getEditor()
+
+  return editor.document.getText(
     new vscode.Range(
       position,
       position.with({ character: position.character + 1 })
@@ -142,33 +146,41 @@ const hasSelection = (editor: vscode.TextEditor): boolean =>
  * @param line - target
  * @returns position of first non-whitespace character on target line
  */
-const getContentStartPos = (line: vscode.TextLine | number): vscode.Position =>
-  new vscode.Position(
+function getContentStartPos(line: vscode.TextLine | number): vscode.Position {
+  const editor = getEditor()
+
+  return new vscode.Position(
     typeof line === "number" ? line : line.lineNumber,
     (typeof line === "number"
-      ? getEditor().document.lineAt(line)
+      ? editor.document.lineAt(line)
       : line
     ).firstNonWhitespaceCharacterIndex
   )
+}
 
 /**
  * @param line - target
  * @returns position of last character on target line
  */
-export const getContentEndPos = (
+export function getContentEndPos(
   line: vscode.TextLine | number
-): vscode.Position =>
-  (typeof line === "number" ? getEditor().document.lineAt(line) : line).range
+): vscode.Position {
+  const editor = getEditor()
+
+  return (typeof line === "number" ? editor.document.lineAt(line) : line).range
     .end
+}
 
 /**
  * @param line - target
  * @returns concatenated value of indentation on target line
  */
 export const getIndentation = (line: vscode.TextLine | number): string => {
+  const editor = getEditor()
   const currentLine =
-    typeof line === "number" ? getEditor().document.lineAt(line) : line
-  return getEditor().document.getText(
+    typeof line === "number" ? editor.document.lineAt(line) : line
+
+  return editor.document.getText(
     currentLine.range.with({
       end: currentLine.range.end.with({
         character: currentLine.firstNonWhitespaceCharacterIndex,
@@ -346,28 +358,28 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   if (
     jsdocStart?.index === undefined &&
     jsdocEnd?.index === undefined &&
-    getEditor().selection.end.character ===
+    editor.selection.end.character ===
       getSelectionLastLine().range.end.character
   ) {
     const originalSelection = new vscode.Selection(
-      getEditor().selection.anchor,
-      getEditor().selection.active
+      editor.selection.anchor,
+      editor.selection.active
     )
 
-    await getEditor().insertSnippet(
+    await editor.insertSnippet(
       new vscode.SnippetString(`$0${MAGIC_CHARACTER}`),
-      getEditor().selection.end,
+      editor.selection.end,
       { undoStopAfter: false, undoStopBefore: false }
     )
 
     // insert snippet removes the current selection, so restore it
-    if (!getEditor().selection.isEqual(originalSelection)) {
+    if (!editor.selection.isEqual(originalSelection)) {
       setCursorSelection(originalSelection)
     }
   }
 
   // construct and trigger single batch of changes
-  return getEditor().edit((editBuilder) => {
+  return editor.edit((editBuilder) => {
     // #region - remove single line jsdoc, selection or no selection
     if (
       isSingleLineSelection &&
@@ -378,7 +390,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         jsdocStart.index,
         lineLast.lineNumber,
         jsdocEnd.index + jsdocEnd[0].length
-      ).contains(getEditor().selection.active)
+      ).contains(editor.selection.active)
     ) {
       log("removing single line jsdoc")
 
@@ -480,25 +492,25 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
         editBuilder.insert(editor.selection.start, "/** ")
 
-        const nextChar = getNextChar(getEditor().selection.end)
+        const nextChar = getNextChar(editor.selection.end)
 
         editBuilder.replace(
           new vscode.Range(
-            getEditor().selection.end,
-            getEditor().selection.end.translate({ characterDelta: 1 })
+            editor.selection.end,
+            editor.selection.end.translate({ characterDelta: 1 })
           ),
           ` */${nextChar !== MAGIC_CHARACTER ? nextChar : ""}`
         )
       } else if (
         blockCommentStartIndex > -1 &&
         blockCommentEndIndex > -1 &&
-        getEditor().selection.active.character > blockCommentStartIndex &&
-        getEditor().selection.active.character <
+        editor.selection.active.character > blockCommentStartIndex &&
+        editor.selection.active.character <
           blockCommentEndIndex + BLOCK_COMMENT_END_TAG.length
       ) {
         log("converting block comment to jsdoc")
         // block comment already exists and active cursor within it
-        const firstChar = getEditor().document.getText(
+        const firstChar = editor.document.getText(
           new vscode.Range(
             lineFirst.lineNumber,
             blockCommentStartIndex + BLOCK_COMMENT_START_TAG.length,
@@ -509,8 +521,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
         if (isBlockCommentTrailing) {
           const indent = getIndentation(lineFirst)
-          const prevContent = getEditor()
-            .document.getText(
+          const prevContent = editor.document
+            .getText(
               new vscode.Range(
                 getContentStartPos(lineFirst),
                 new vscode.Position(
@@ -520,8 +532,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
               )
             )
             .trim()
-          const nextContent = getEditor()
-            .document.getText(
+          const nextContent = editor.document
+            .getText(
               new vscode.Range(
                 new vscode.Position(
                   lineFirst.lineNumber,
@@ -532,21 +544,21 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             )
             .trim()
 
-          const prevCommentChars = getEditor()
-            .document.getText(
+          const prevCommentChars = editor.document
+            .getText(
               new vscode.Range(
                 new vscode.Position(
                   lineFirst.lineNumber,
                   blockCommentStartIndex + BLOCK_COMMENT_START_TAG.length
                 ),
-                getEditor().selection.active
+                editor.selection.active
               )
             )
             .trimStart()
-          const nextCommentChars = getEditor()
-            .document.getText(
+          const nextCommentChars = editor.document
+            .getText(
               new vscode.Range(
-                getEditor().selection.active,
+                editor.selection.active,
                 new vscode.Position(lineFirst.lineNumber, blockCommentEndIndex)
               )
             )
@@ -554,19 +566,19 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
           editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active.with({ character: 0 }),
-              getEditor().selection.active
+              editor.selection.active.with({ character: 0 }),
+              editor.selection.active
             ),
             ""
           )
           editBuilder.insert(
-            getEditor().selection.active.with({ character: 0 }),
+            editor.selection.active.with({ character: 0 }),
             `${indent}/** ${prevCommentChars}`
           )
           editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active,
-              getContentEndPos(getEditor().selection.active.line)
+              editor.selection.active,
+              getContentEndPos(editor.selection.active.line)
             ),
             `${nextCommentChars} */\n${indent}${prevContent}${nextContent}`
           )
@@ -589,10 +601,10 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         }
       } else if (
         lineCommentTag?.index !== undefined &&
-        getEditor().selection.active.character > lineCommentTag.index
+        editor.selection.active.character > lineCommentTag.index
       ) {
         log("converting line comment to jsdoc")
-        const firstChar = getEditor().document.getText(
+        const firstChar = editor.document.getText(
           new vscode.Range(
             lineFirst.lineNumber,
             lineFirst.firstNonWhitespaceCharacterIndex +
@@ -651,7 +663,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             `${indent}/**${firstChar !== " " ? " " : ""}`
           )
 
-          const lastChar = getEditor().document.getText(
+          const lastChar = editor.document.getText(
             new vscode.Range(
               getContentEndPos(lineFirst).translate(0, -1),
               getContentEndPos(lineFirst)
@@ -667,8 +679,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
         } else {
           // line comment trails code
-          const prevContent = getEditor()
-            .document.getText(
+          const prevContent = editor.document
+            .getText(
               new vscode.Range(
                 getContentStartPos(lineFirst),
                 new vscode.Position(lineFirst.lineNumber, lineCommentTag.index)
@@ -676,21 +688,21 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             )
             .trim()
 
-          const prevCommentChars = getEditor()
-            .document.getText(
+          const prevCommentChars = editor.document
+            .getText(
               new vscode.Range(
                 new vscode.Position(
                   lineFirst.lineNumber,
                   lineCommentTag.index + LINE_COMMENT_TAG.length
                 ),
-                getEditor().selection.active
+                editor.selection.active
               )
             )
             .trimStart()
-          const nextCommentChars = getEditor()
-            .document.getText(
+          const nextCommentChars = editor.document
+            .getText(
               new vscode.Range(
-                getEditor().selection.active,
+                editor.selection.active,
                 getContentEndPos(lineFirst)
               )
             )
@@ -698,19 +710,19 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
           editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active.with({ character: 0 }),
-              getEditor().selection.active
+              editor.selection.active.with({ character: 0 }),
+              editor.selection.active
             ),
             ""
           )
           editBuilder.insert(
-            getEditor().selection.active.with({ character: 0 }),
+            editor.selection.active.with({ character: 0 }),
             `${indent}/** ${prevCommentChars}`
           )
           editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active,
-              getContentEndPos(getEditor().selection.active.line)
+              editor.selection.active,
+              getContentEndPos(editor.selection.active.line)
             ),
             `${nextCommentChars} */\n${indent}${prevContent}`
           )
@@ -718,29 +730,29 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
       } else {
         log("adding NEW jsdoc comment when NO SELECTION")
 
-        const prevChar = getPrevChar(getEditor().selection.active)
-        const nextChar = getNextChar(getEditor().selection.active)
+        const prevChar = getPrevChar(editor.selection.active)
+        const nextChar = getNextChar(editor.selection.active)
         const isLineBlank =
           lineActive.isEmptyOrWhitespace ||
           lineActive.text.includes(MAGIC_CHARACTER)
 
         if (
           (!isLineBlank &&
-            getEditor().selection.active.character ===
+            editor.selection.active.character ===
               lineActive.firstNonWhitespaceCharacterIndex) ||
           (prevChar === " " &&
             nextChar === " " &&
-            getEditor().selection.active.character >
+            editor.selection.active.character >
               lineActive.firstNonWhitespaceCharacterIndex)
         ) {
           log(
             "add inline jsdoc, cursor at start of non-empty line or has spaces on both sides"
           )
-          editBuilder.insert(getEditor().selection.active, "/** ")
+          editBuilder.insert(editor.selection.active, "/** ")
           editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active,
-              getEditor().selection.active.translate({ characterDelta: 1 })
+              editor.selection.active,
+              editor.selection.active.translate({ characterDelta: 1 })
             ),
             ` */${nextChar && nextChar !== " " ? " " : ""}${nextChar}`
           )
@@ -749,29 +761,29 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             "add jsdoc on prev line, cursor somewhere in middle, or at end of line, or at start of blank line"
           )
           const indent = getIndentation(lineFirst)
-          const prevChars = getEditor().document.getText(
+          const prevChars = editor.document.getText(
             new vscode.Range(
-              getEditor().selection.active.with({ character: 0 }),
-              getEditor().selection.active
+              editor.selection.active.with({ character: 0 }),
+              editor.selection.active
             )
           )
 
           editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active.with({ character: 0 }),
-              getEditor().selection.active
+              editor.selection.active.with({ character: 0 }),
+              editor.selection.active
             ),
             ``
           )
           editBuilder.insert(
-            getEditor().selection.active.with({ character: 0 }),
+            editor.selection.active.with({ character: 0 }),
             `${indent}/** `
           )
 
           editBuilder.replace(
             new vscode.Range(
-              getEditor().selection.active,
-              getEditor().selection.active.translate({ characterDelta: 1 })
+              editor.selection.active,
+              editor.selection.active.translate({ characterDelta: 1 })
             ),
             // if there are non-whitespace chars on the line, move comment to previous line
             isLineBlank
@@ -792,7 +804,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     editBuilder.insert(getContentStartPos(lineFirst), `/**\n${indentation}`)
     // target all lines between opening tag exclusive and closing tag inclusive
     for (let i = lineFirst.lineNumber; i <= lineLast.lineNumber; i += 1) {
-      const line = getEditor().document.lineAt(i)
+      const line = editor.document.lineAt(i)
       if (line) {
         const contentStart = line.text.slice(
           line.firstNonWhitespaceCharacterIndex

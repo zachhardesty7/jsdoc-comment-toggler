@@ -5,7 +5,7 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "compile-launch",
+      "script": "compile",
       "label": "NPM: compile launch",
       "problemMatcher": "$tsc",
       "presentation": {
@@ -33,7 +33,7 @@
     {
       "type": "npm",
       "script": "watch",
-      // "label": "NPM: watch",
+      "label": "NPM: watch",
       "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {
@@ -45,34 +45,9 @@
       }
     },
     {
-      "type": "shell",
-      "command": "yarn compile",
-      "label": "yarn: compile",
-      "problemMatcher": "$tsc-watch",
-      "isBackground": true,
-      "presentation": {
-        "reveal": "never"
-      },
-      "group": {
-        "kind": "build"
-        // "isDefault": true
-      }
-    },
-    {
-      "type": "shell",
-      "command": "yarn watch",
-      "label": "yarn: watch",
-      "problemMatcher": "$tsc-watch",
-      "isBackground": true,
-      "presentation": {
-        "panel": "dedicated",
-        "reveal": "never"
-      }
-    },
-    {
-      "type": "shell",
-      "command": "yarn test",
-      "label": "yarn: run mocha tests",
+      "type": "npm",
+      "script": "test",
+      "label": "NPM: run mocha tests",
       "presentation": {
         "panel": "dedicated",
         "clear": true,

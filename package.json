@@ -67,7 +67,6 @@
   "scripts": {
     "clean": "rm -rf ./out",
     "compile": "tsc -p ./",
-    "compile-launch": "tsc -p ./",
     "lint": "eslint . --ext .ts,.tsx",
     "watch": "tsc -watch -p ./",
     "_pack": "vsce package",

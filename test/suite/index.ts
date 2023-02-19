@@ -54,7 +54,9 @@ export const run = (
     try {
       // Run the mocha test
       return mocha.run((failures) => {
-        log.error(`${failures} tests failed`)
+        if (failures) {
+          log.error(`${failures} tests failed`)
+        }
 
         if (DEBUG_TESTS) {
           log.info("files tested at this point", [...getTestedFiles()])

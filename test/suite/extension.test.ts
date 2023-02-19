@@ -384,7 +384,6 @@ describe("single line jsdoc comment", () => {
             )
           )
 
-          // TODO: needs new file
           describe(
             "when cursor is before comment",
             itHasCorrectOutputAndCursorPosition(
@@ -669,6 +668,11 @@ describe("single line jsdoc comment", () => {
 describe("remove existing jsdoc", () => {
   describe("when it's alone on a line", () => {
     describe(
+      "when cursor is before comment",
+      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 0, 0, 0)
+    )
+
+    describe(
       "when cursor's inside",
       itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 20, 0, -1)
     )
@@ -702,7 +706,7 @@ describe("remove existing jsdoc", () => {
       1,
       0,
       0,
-      -3,
+      -2,
       0,
       0
     )

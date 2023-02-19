@@ -33,7 +33,8 @@ export const log = (...messages: unknown[]): void => {
 /**
  * helper to guarantee the active editor is defined.
  *
- * guards against an invariant state by yeeting the entire extension when no editor
+ * guards against an invariant state by yeeting the entire extension when no
+ * editor
  *
  * should **NOT** be possible to ever trigger
  *
@@ -99,9 +100,7 @@ function getNextLine(
     : getEditor().document.lineAt(lineNumber + 1)
 }
 
-/**
- * @returns the last line of the current selection
- */
+/** @returns the last line of the current selection */
 function getSelectionLastLine(): vscode.TextLine {
   return getEditor().document.lineAt(getEditor().selection.end.line)
 }
@@ -180,14 +179,14 @@ export const getIndentation = (line: vscode.TextLine | number): string => {
 
 // #region - fix cursor / selection pos
 /**
- * if cursor was at end of last line, the comment tag is errantly placed
- * before the cursor. this moves the comment tag after the cursor, keeping the
- * cursor in the original position before the JSDoc was inserted
- * vscode doesn't have the ability to add to line index greater than max
+ * if cursor was at end of last line, the comment tag is errantly placed before
+ * the cursor. this moves the comment tag after the cursor, keeping the cursor
+ * in the original position before the JSDoc was inserted vscode doesn't have
+ * the ability to add to line index greater than max
  *
+ * @deprecated - inaccurate results if called _during_ a textEdit. if called
+ *   _after_, the cursor movement is noticeable and somewhat slow
  * @param isSingleLineComment - precalculated
- * @deprecated - inaccurate results if called _during_ a textEdit. if called _after_, the
- * cursor movement is noticeable and somewhat slow
  */
 const adjustCursorPos = async (isSingleLineComment: boolean) => {
   const editor = getEditor()
@@ -289,8 +288,8 @@ const adjustCursorPos = async (isSingleLineComment: boolean) => {
 }
 
 /**
- * primary extension action, removes the JSDoc tags on selected lines if present or inserts
- * a JSDoc wrapping the selected lines of text comment
+ * primary extension action, removes the JSDoc tags on selected lines if present
+ * or inserts a JSDoc wrapping the selected lines of text comment
  *
  * @returns once edit is complete
  */

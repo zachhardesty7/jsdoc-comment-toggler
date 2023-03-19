@@ -1,6 +1,6 @@
 {
   "name": "jsdoc-comment-toggler",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "preview": true,
   "displayName": "jsdoc comment toggler",
   "description": "toggle JSDoc comment on line or selection",
@@ -54,14 +54,14 @@
   },
   "keybindings": [
     {
-      "key": "ctrl+k ctrl+/",
+      "key": "ctrl+r ctrl+/",
       "command": "jsdoc-comment-toggler.toggle",
-      "when": "!isMac && editorTextFocus"
+      "when": "!isMac && editorTextFocus && !editorReadonly"
     },
     {
-      "key": "cmd+k cmd+/",
+      "key": "cmd+r cmd+/",
       "command": "jsdoc-comment-toggler.toggle",
-      "when": "isMac && editorTextFocus"
+      "when": "isMac && editorTextFocus && !editorReadonly"
     }
   ],
   "scripts": {

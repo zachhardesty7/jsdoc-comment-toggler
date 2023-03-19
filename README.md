@@ -14,18 +14,22 @@ comment and bam
 
 ## Features
 
-- convert a block or line comment into a JSDoc comment
+- convert a line comment into JSDoc and vice versa
+  ![toggle line comment](images/toggle-line.gif)
+- convert a block comment into JSDoc and vice versa
+  ![toggle block comment](images/toggle-block.gif)
 - generate a new JSDoc comment to start documenting a variable
-- convert JSDoc into a regular comment
+  ![generate new JSDoc](images/add.gif)
 - generate inline JSDoc for "casting" a value with `@type`
+  ![generate inline JSDoc](images/add-inline.gif)
 
 ## Usage
 
 - command: `Toggle JSDoc Comment`
-- keyboard shortcut: `ctrl+k ctrl+/` or `cmd+k cmd+/` for MacOS
+- keyboard shortcut: `ctrl+r ctrl+/` or `cmd+r cmd+/` for MacOS
   - the shortcut uses chords - press the first key combination, release, and then
-    press the second
-  - change shortcut in Preferences -> Keyboard Shortcuts -> extension.jsdoc-comment-toggler
+    press the second (tip: you can hold `ctrl`/`cmd` the whole time)
+  - change shortcut in Preferences -> Keyboard Shortcuts -> Search "jsdoc-comment-toggler"
 
 ## Extension Settings
 

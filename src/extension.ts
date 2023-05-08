@@ -853,17 +853,21 @@ export const activate = (context: vscode.ExtensionContext): void => {
   // TODO: investigate possible performance issues with this
   // when an undo or redo contains our magic character, perform it twice as adding
   // and removing the magic character is an extra item on the undo stack
-  vscode.workspace.onDidChangeTextDocument((event) => {
-    if (event.contentChanges[0]?.text === MAGIC_CHARACTER) {
-      if (event.reason === vscode.TextDocumentChangeReason.Undo) {
-        vscode.commands.executeCommand("undo")
-      } else if (event.reason === vscode.TextDocumentChangeReason.Redo) {
-        vscode.commands.executeCommand("redo")
-      } else {
-        // ignore undefined event reasons (e.g. typing)
+  vscode.workspace.onDidChangeTextDocument(
+    (event) => {
+      if (event.contentChanges[0]?.text === MAGIC_CHARACTER) {
+        if (event.reason === vscode.TextDocumentChangeReason.Undo) {
+          vscode.commands.executeCommand("undo")
+        } else if (event.reason === vscode.TextDocumentChangeReason.Redo) {
+          vscode.commands.executeCommand("redo")
+        } else {
+          // ignore undefined event reasons (e.g. typing)
+        }
       }
-    }
-  })
+    },
+    null,
+    context.subscriptions
+  )
 
   if (DEBUG) {
     vscode.window.showInformationMessage("jsdoc comment toggler loaded")

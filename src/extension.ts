@@ -8,6 +8,7 @@
 // https://code.visualstudio.com/api/references/vscode-api#Range
 
 import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
+import { getConfigKey } from "./config" // eslint-disable-line import/no-unresolved
 
 const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
@@ -358,6 +359,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   // add hidden text to enable using a replace operation when the cursor is at the end of
   // the line without altering the cursor position
   if (
+    getConfigKey("cursorHack") &&
     jsdocStart?.index === undefined &&
     jsdocEnd?.index === undefined &&
     editor.selection.end.character ===

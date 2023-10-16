@@ -204,6 +204,7 @@ export const getIndentation = (line: vscode.TextLine | number): string => {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const adjustCursorPos = async (isSingleLineComment: boolean) => {
+  log("adjusting cursor pos")
   const editor = getEditor()
   const cursorPos = editor.selection.active
 
@@ -359,7 +360,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
   // add hidden text to enable using a replace operation when the cursor is at the end of
   // the line without altering the cursor position
   if (
-    getConfigKey("cursorHack") &&
+    !getConfigKey("disableCursorHack") &&
     jsdocStart?.index === undefined &&
     jsdocEnd?.index === undefined &&
     editor.selection.end.character ===
@@ -826,6 +827,13 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
         )
         const commentTag = contentStart.match(LINE_COMMENT_TAG)
         if (commentTag) {
+          const firstChar = getNextChar(
+            new vscode.Position(
+              line.lineNumber,
+              line.firstNonWhitespaceCharacterIndex + commentTag[0].length
+            )
+          )
+
           editBuilder.replace(
             new vscode.Range(
               line.lineNumber,
@@ -833,7 +841,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
               line.lineNumber,
               line.firstNonWhitespaceCharacterIndex + commentTag[0].length
             ),
-            " * "
+            ` *${firstChar === " " ? "" : " "}`
           )
         } else {
           editBuilder.insert(getContentStartPos(line), " * ")
@@ -841,7 +849,12 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
       }
     }
 
-    editBuilder.insert(getContentEndPos(lineLast), `\n${indentation} */`)
+    const contentEnd = getContentEndPos(lineLast)
+    const nextChar = getNextChar(contentEnd)
+    editBuilder.replace(
+      new vscode.Range(contentEnd, contentEnd.translate({ characterDelta: 1 })),
+      `\n${indentation} */${nextChar === MAGIC_CHARACTER ? "" : nextChar}`
+    )
   })
 }
 

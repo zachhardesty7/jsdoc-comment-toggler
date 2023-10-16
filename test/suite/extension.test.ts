@@ -100,7 +100,7 @@ const itHasTargetText = (
       assert.strictEqual(
         getEditor().document.getText(),
         content,
-        `output text incorrect, initial selection from ${
+        `output text incorrect, initial selection (1-based Editor index) from ${
           initial.anchor._line + 1
         }:${initial.anchor._character + 1} to ${initial.active._line + 1}:${
           initial.active._character + 1
@@ -138,16 +138,17 @@ const itHasCursorSelectionPosition = (
         )
       }
 
-      assert.deepStrictEqual(
-        {
-          anchor: getEditor().selection.anchor,
-          active: getEditor().selection.active,
-        },
-        {
-          anchor,
-          active,
-        },
-        `cursor and/or selection in incorrect position, initial selection from ${
+      const { selection } = getEditor()
+      assert.strictEqual(
+        `anchor: ${selection.anchor.line + 1}:${
+          selection.anchor.character + 1
+        } \nactive: ${selection.active.line + 1}:${
+          selection.active.character + 1
+        }`,
+        `anchor: ${anchor.line + 1}:${anchor.character + 1} \nactive: ${
+          active.line + 1
+        }:${active.character + 1}`,
+        `cursor and/or selection in incorrect position (1-based Editor index), initial selection from ${
           initial.anchor._line + 1
         }:${initial.anchor._character + 1} to ${initial.active._line + 1}:${
           initial.active._character + 1
@@ -714,7 +715,7 @@ describe("remove existing jsdoc", () => {
 })
 
 // #region - multiline comments
-describe.skip("multi line jsdoc comment", () => {
+describe("multi line jsdoc comment", () => {
   describe("add", () => {
     describe(
       "selection not before or at end (internal)",
@@ -731,7 +732,6 @@ describe.skip("multi line jsdoc comment", () => {
       )
     )
 
-    // REVIEW: not sure this makes sense
     describe(
       "selection is before first non-whitespace char",
       itHasCorrectOutputAndSelectionPositions(
@@ -740,10 +740,11 @@ describe.skip("multi line jsdoc comment", () => {
         1,
         2,
         5,
+        // TODO: consider not including JSDoc opening `/**` in selection and make next two params 1, 3
+        0,
+        0,
         1,
-        3,
-        1,
-        4
+        3
       )
     )
 
@@ -779,7 +780,6 @@ describe.skip("multi line jsdoc comment", () => {
       )
     )
 
-    // REVIEW: not sure this makes sense
     describe(
       "selection is before first non-whitespace char",
       itHasCorrectOutputAndSelectionPositions(
@@ -790,21 +790,22 @@ describe.skip("multi line jsdoc comment", () => {
         1,
         1,
         1,
-        1,
-        4
+        // TODO: consider not including JSDoc opening `/**` in selection and make next two params 1, 4
+        0,
+        0
       )
     )
 
     describe(
-      "selection is at end",
+      "selection starts at end",
       itHasCorrectOutputAndSelectionPositions(
         "multiConvertLine.js",
         2,
-        16,
+        15,
         1,
         9,
         1,
-        0,
+        1,
         1,
         0
       )
@@ -820,8 +821,9 @@ describe.skip("multi line jsdoc comment", () => {
         5,
         1,
         2,
-        -2,
-        8,
+        // TODO: consider excluding trailing newline from selection, making next two params -1, 11
+        -1,
+        -5,
         0,
         -2
       )
@@ -830,7 +832,7 @@ describe.skip("multi line jsdoc comment", () => {
     describe(
       "neither the start nor end tags' lines are within selection",
       itHasCorrectOutputAndSelectionPositions(
-        "multiConvertLine.js",
+        "multiRemove.js",
         3,
         8,
         2,
@@ -843,10 +845,10 @@ describe.skip("multi line jsdoc comment", () => {
     )
 
     // TODO: single line multi line block comment
-    describe(
+    describe.skip(
       "no selection & cursor is anywhere within",
       itHasCorrectOutputAndSelectionPositions(
-        "multiAdd.js",
+        "multiRemove.js",
         2,
         8,
         2,

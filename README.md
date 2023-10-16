@@ -33,7 +33,7 @@ comment and bam
 
 ## Extension Settings
 
-- `jsdoc-comment-toggler.cursorHack` - use a cursor "hack" to avoid a VSCode issue where it's impossible to add text after the cursor when it's at the end of the line. In that scenario, this hack inserts a snippet with a zero-width-space after the cursor to invisibly keep the cursor in the correct position. The zero-width-space is removed when the comment tags are added. This hack is safe to use as VSCode will highlight the zero-width-space for you to manually remove if something fails. If you ever see a zero-width-space in a comment, please create an issue on GitHub with a reproducible case.
+- `jsdoc-comment-toggler.disableCursorHack` - disable a cursor hack that avoids a VSCode issue where it's impossible to add text after a cursor that's at the end of a line. In that scenario, this hack inserts a snippet with a zero-width-space after the cursor to invisibly keep the cursor in the correct position while running the edits. The extension removes the zero-width-space while adding the comment tags. This hack is safe to use because VSCode highlights the zero-width-space for you to manually remove if something fails. If you ever see a zero-width-space in a comment, please create an issue on GitHub with a reproducible case. As a workaround, you can enable this setting to prevent adding the zero-width-space and fixing the cursor position until we can address the bug.
   - default: `false`
   - still searching for a better way to do this and/or guarantee that a zero-width-space won't be left behind
 

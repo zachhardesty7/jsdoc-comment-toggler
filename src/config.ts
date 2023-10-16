@@ -1,7 +1,7 @@
 import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
 
 export interface ExtensionConfig {
-  cursorHack: boolean
+  disableCursorHack: boolean
 }
 
 /**

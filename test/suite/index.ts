@@ -2,7 +2,7 @@
 
 import path from "path"
 import Mocha from "mocha"
-import glob from "glob"
+import { glob } from "glob"
 import vscode from "vscode"
 import { cyan } from "ansi-colors"
 import { DEBUG_TESTS, getTestedFiles, log } from "../utils"
@@ -27,13 +27,11 @@ export const run = (
     "../../../test/suite/scratchpad.js"
   )
 
-  // NOTE: async required to keep files from overwriting editor
-  glob("**/**.test.js", { cwd: testsRoot }, async (err, files) => {
-    if (err) {
-      log.error("glob err", err)
-      return cb(err)
-    }
+  main()
 
+  // NOTE: async required to keep files from overwriting editor
+  async function main() {
+    const files = await glob("**/**.test.js", { cwd: testsRoot })
     console.time(`${cyan("info")} Time to init all tests`)
 
     const document = await vscode.workspace.openTextDocument(
@@ -68,5 +66,5 @@ export const run = (
       log.error("caught err", error)
       return cb(error instanceof Error ? error : null)
     }
-  })
+  }
 }

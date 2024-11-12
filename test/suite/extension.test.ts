@@ -303,6 +303,22 @@ describe("single line jsdoc comment", () => {
       )
     })
 
+    // FIXME: adds line to the comment that has active cursor
+    describe.skip(
+      "when selection is entire line",
+      itHasCorrectOutputAndSelectionPositions(
+        "singleAddSelection.js",
+        0,
+        0,
+        1,
+        0,
+        0,
+        4,
+        -1,
+        26
+      )
+    )
+
     // TODO: improve weak example
     describe(
       "when selection exists within interior of line",
@@ -335,10 +351,40 @@ describe("single line jsdoc comment", () => {
       )
     )
 
+    // FIXME: adds line to the comment that has active cursor & messes up selection
+    describe.skip(
+      "when selection is entire line (triple click) and indented",
+      itHasCorrectOutputAndSelectionPositions(
+        "singleAddSelectionIndent.js",
+        1,
+        0,
+        2,
+        0,
+        0,
+        6,
+        -1,
+        28
+      )
+    )
+    // FIXME: adds line to the comment that has active cursor & messes up spacing & selection
+    describe.skip(
+      "when selection is entire alone line (triple click) and indented",
+      itHasCorrectOutputAndSelectionPositions(
+        "singleAddSelectionIndentAlone.js",
+        2,
+        0,
+        3,
+        0,
+        0,
+        6,
+        -1,
+        28
+      )
+    )
     describe(
       "when selection is all of the text and indented",
       itHasCorrectOutputAndSelectionPositions(
-        "singleAddIndentSelection.js",
+        "singleAddSelectionIndent.js",
         1,
         2,
         1,
@@ -352,7 +398,7 @@ describe("single line jsdoc comment", () => {
     describe(
       "when reversed selection is all of the text and indented",
       itHasCorrectOutputAndSelectionPositions(
-        "singleAddIndentSelection.js",
+        "singleAddSelectionIndent.js",
         1,
         24,
         1,
@@ -365,12 +411,11 @@ describe("single line jsdoc comment", () => {
     )
   })
 
-  describe("converting existing comment", () => {
+  describe("when existing comment", () => {
     describe("when it's a line comment", () => {
-      // TODO: make sure any arbitrary spaces are handled
-      describe.skip("when it's missing spaces and is ugly", () => {
-        /* TODO: implement */
-      })
+      // TODO: implement (make sure any arbitrary spaces are handled)
+      // describe("when it's missing spaces and is ugly", () => {
+      // })
 
       describe("when it's alone on a line", () => {
         describe("when NO selection", () => {
@@ -440,9 +485,9 @@ describe("single line jsdoc comment", () => {
             )
           )
         })
-        describe.skip("when selection", () => {
-          /* TODO: implement */
-        })
+        // TODO: implement
+        // describe("when selection", () => {
+        // })
       })
 
       describe("when it's at start of a line", () => {
@@ -458,15 +503,14 @@ describe("single line jsdoc comment", () => {
             )
           )
 
-          // TODO: needs new file
-          describe.skip(
-            "when cursor is before comment",
+          describe(
+            "when cursor is just before comment tag",
             itHasCorrectOutputAndCursorPosition(
               "singleConvertLineStart.js",
-              2,
-              1,
               0,
-              4
+              0,
+              0,
+              3
             )
           )
 
@@ -514,9 +558,9 @@ describe("single line jsdoc comment", () => {
             )
           )
         })
-        describe.skip("when selection", () => {
-          /* TODO: implement */
-        })
+        // TODO: implement
+        // describe("when selection", () => {
+        // })
       })
 
       describe("when it's nested in JSDoc", () => {
@@ -542,7 +586,7 @@ describe("single line jsdoc comment", () => {
             -1
           )
         )
-        // TODO: rm extra space
+        // FIXME: rm extra space
         describe(
           "when a star proceeds it",
           itHasCorrectOutputAndCursorPosition(
@@ -557,11 +601,10 @@ describe("single line jsdoc comment", () => {
 
       describe("when it's trailing code", () => {
         describe("when NO selection", () => {
-          // FIXME: create new tag
-          describe.skip(
+          describe(
             "when cursor is before comment",
             itHasCorrectOutputAndCursorPosition(
-              "singleConvertLineTrailing.js",
+              "singleConvertLineTrailingB.js",
               2,
               6,
               0,
@@ -578,10 +621,64 @@ describe("single line jsdoc comment", () => {
               -12
             )
           )
+          // REVIEW: should this leave cursor just before comment tag instead of moving inside jsdoc?
+          // FIXME: creates new comment instead of converting
+          describe.skip(
+            "when cursor is just before comment tag",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineTrailing.js",
+              2,
+              15,
+              0,
+              -9
+            )
+          )
+          // FIXME: doesn't get rid of comment tag
+          describe.skip(
+            "when cursor is inside comment tag",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineTrailing.js",
+              2,
+              16,
+              0,
+              -10
+            )
+          )
+          // FIXME: adds an extra space between jsdoc start and comment
+          describe.skip(
+            "when cursor is just after comment tag before a space",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineTrailing.js",
+              2,
+              17,
+              0,
+              -11
+            )
+          )
+          describe(
+            "when cursor is just after space after comment tag",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineTrailing.js",
+              2,
+              18,
+              0,
+              -12
+            )
+          )
+          describe(
+            "when cursor is at end of line comment",
+            itHasCorrectOutputAndCursorPosition(
+              "singleConvertLineTrailing.js",
+              2,
+              40,
+              0,
+              -12
+            )
+          )
         })
-        describe.skip("when selection", () => {
-          /* TODO: implement */
-        })
+        // TODO: implement
+        // describe("when selection", () => {
+        // })
       })
     })
 
@@ -651,7 +748,7 @@ describe("single line jsdoc comment", () => {
           -10
         )
       )
-      // TODO: doesn't add space afterward
+      // FIXME: doesn't add space afterward
       describe.skip(
         "when it's missing spaces and ugly",
         itHasCorrectOutputAndCursorPosition(

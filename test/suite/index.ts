@@ -19,7 +19,7 @@ export const run = (
     color: true,
     inlineDiffs: true,
     bail: DEBUG_TESTS,
-    timeout: 8000,
+    timeout: 10000, // bumped up so startup doesn't fail first test
   })
 
   const scratchpadUri = path.join(

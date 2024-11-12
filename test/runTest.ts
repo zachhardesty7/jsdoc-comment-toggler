@@ -4,10 +4,7 @@ import path from "path"
 import { cyan } from "ansi-colors"
 
 import { runTests } from "vscode-test"
-import { config } from "dotenv"
 import { log } from "./utils"
-
-config()
 
 async function main() {
   try {
@@ -24,7 +21,7 @@ async function main() {
 
     // Download VS Code, unzip it and run the integration test
     await runTests({ extensionDevelopmentPath, extensionTestsPath })
-    log.info("All tests passed!")
+    log.info("No tests failed!")
   } catch {
     log.warn("Some tests failed")
   } finally {

@@ -7,7 +7,7 @@
   "configurations": [
     {
       // REVIEW: usually does not launch vscode on Windows
-      "name": "Extension w Watch",
+      "name": "extension (with watch)",
       "type": "extensionHost",
       "request": "launch",
       "env": {
@@ -15,22 +15,12 @@
         "DEBUG_EXTENSION": "true"
       },
       "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "args": [
+        "${workspaceFolder}/test", // open to test directory
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
       "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "NPM: watch"
-    },
-    {
-      "name": "Extension",
-      "env": {
-        "DEBUG_EXTENSION_ENTRY": "true",
-        "DEBUG_EXTENSION": "true"
-      },
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
-      "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "NPM: compile"
+      "preLaunchTask": "${defaultBuildTask}"
     },
     {
       "name": "Tests exec",

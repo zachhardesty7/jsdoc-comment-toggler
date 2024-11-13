@@ -65,7 +65,7 @@ const loadFile = async (fileName: string): Promise<string> => {
   await editor.edit((editBuilder) => {
     editBuilder.replace(
       new vscode.Range(0, 0, lineLast.lineNumber, lineLast.range.end.character),
-      startingContent
+      startingContent,
     )
   })
 
@@ -85,7 +85,7 @@ const loadFile = async (fileName: string): Promise<string> => {
 const itHasTargetText = (
   targets: Targets,
   fileName: string,
-  initial: Range
+  initial: Range,
 ) => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
@@ -106,7 +106,7 @@ const itHasTargetText = (
           initial.active._character + 1
         }
         input file: ${startingContentUri}
-        target file: ${targetContentUri}`
+        target file: ${targetContentUri}`,
       )
     } catch (error) {
       if (error instanceof Error) {
@@ -120,7 +120,7 @@ const itHasTargetText = (
 const itHasCursorSelectionPosition = (
   targets: Targets,
   fileName: string,
-  initial: Range
+  initial: Range,
 ) => {
   const startingContentUri = path.join(__dirname, testsFolder, fileName)
   const targetContentUri = path.join(__dirname, resultsFolder, fileName)
@@ -134,7 +134,7 @@ const itHasCursorSelectionPosition = (
       const { anchor, active } = targets
       if (!anchor || !active) {
         throw new ReferenceError(
-          "target anchor and/or active positions not found"
+          "target anchor and/or active positions not found",
         )
       }
 
@@ -154,7 +154,7 @@ const itHasCursorSelectionPosition = (
           initial.active._character + 1
         }
         input file: ${startingContentUri}
-        target file: ${targetContentUri}`
+        target file: ${targetContentUri}`,
       )
     } catch (error) {
       if (error instanceof Error) {
@@ -171,7 +171,7 @@ const loadTextAndToggleJsdoc =
     fileName: string,
     targets: Targets,
     anchorInitialPos: vscode.Position,
-    activeInitialPos: vscode.Position
+    activeInitialPos: vscode.Position,
   ): Mocha.Func =>
   async () => {
     const targetContent = await loadFile(fileName)
@@ -179,7 +179,7 @@ const loadTextAndToggleJsdoc =
 
     getEditor().selection = new vscode.Selection(
       anchorInitialPos,
-      activeInitialPos
+      activeInitialPos,
     )
 
     await toggleJSDocComment()
@@ -196,16 +196,16 @@ const itHasCorrectOutputAndSelectionPositions =
     anchorLineDelta: number,
     anchorCharDelta: number,
     activeLineDelta: number,
-    activeCharDelta: number
+    activeCharDelta: number,
   ) =>
   () => {
     const anchorInitialPos = new vscode.Position(
       anchorInitialLine,
-      anchorInitialChar
+      anchorInitialChar,
     )
     const activeInitialPos = new vscode.Position(
       activeInitialLine,
-      activeInitialChar
+      activeInitialChar,
     )
 
     const targets: Targets = {
@@ -218,8 +218,8 @@ const itHasCorrectOutputAndSelectionPositions =
         fileName,
         targets,
         anchorInitialPos,
-        activeInitialPos
-      )
+        activeInitialPos,
+      ),
     )
 
     const initialRange: Range = {
@@ -243,7 +243,7 @@ const itHasCorrectOutputAndCursorPosition = (
   cursorInitialLine: number,
   cursorInitialChar: number,
   cursorLineDelta: number,
-  cursorCharDelta: number
+  cursorCharDelta: number,
 ) =>
   itHasCorrectOutputAndSelectionPositions(
     fileName,
@@ -254,7 +254,7 @@ const itHasCorrectOutputAndCursorPosition = (
     cursorLineDelta,
     cursorCharDelta,
     cursorLineDelta,
-    cursorCharDelta
+    cursorCharDelta,
   )
 
 // #region - single line tests
@@ -264,27 +264,27 @@ describe("single line jsdoc comment", () => {
     describe("when NO selection", () => {
       describe(
         "when cursor is at start of an empty line",
-        itHasCorrectOutputAndCursorPosition("singleAddAbove.js", 0, 0, 0, 4)
+        itHasCorrectOutputAndCursorPosition("singleAddAbove.js", 0, 0, 0, 4),
       )
       describe(
         "when cursor is at start of line",
-        itHasCorrectOutputAndCursorPosition("singleAddStart.js", 1, 0, 0, 4)
+        itHasCorrectOutputAndCursorPosition("singleAddStart.js", 1, 0, 0, 4),
       )
       describe(
         "when cursor is not at start but right before text",
-        itHasCorrectOutputAndCursorPosition("singleAddStartB.js", 4, 6, 0, 4)
+        itHasCorrectOutputAndCursorPosition("singleAddStartB.js", 4, 6, 0, 4),
       )
       describe(
         "when cursor is not at start and is 1+ space away from text",
-        itHasCorrectOutputAndCursorPosition("singleAddStartC.js", 4, 0, 0, 10)
+        itHasCorrectOutputAndCursorPosition("singleAddStartC.js", 4, 0, 0, 10),
       )
       describe(
         "when cursor is at end of line",
-        itHasCorrectOutputAndCursorPosition("singleAddEnd.js", 0, 24, 0, -20)
+        itHasCorrectOutputAndCursorPosition("singleAddEnd.js", 0, 24, 0, -20),
       )
       describe(
         "when cursor has space on left and right",
-        itHasCorrectOutputAndCursorPosition("singleAddSpaced.js", 0, 19, 0, 4)
+        itHasCorrectOutputAndCursorPosition("singleAddSpaced.js", 0, 19, 0, 4),
       )
       // REVIEW: maybe add an inline jsdoc comment
       describe(
@@ -294,12 +294,12 @@ describe("single line jsdoc comment", () => {
           0,
           18,
           0,
-          -14
-        )
+          -14,
+        ),
       )
       describe(
         "when cursor is on an indented new line of a block",
-        itHasCorrectOutputAndCursorPosition("singleAddBlock.js", 1, 2, 0, 4)
+        itHasCorrectOutputAndCursorPosition("singleAddBlock.js", 1, 2, 0, 4),
       )
     })
 
@@ -315,8 +315,8 @@ describe("single line jsdoc comment", () => {
         0,
         4,
         -1,
-        26
-      )
+        26,
+      ),
     )
 
     // TODO: improve weak example
@@ -331,8 +331,8 @@ describe("single line jsdoc comment", () => {
         0,
         4,
         0,
-        4
-      )
+        4,
+      ),
     )
 
     // TODO: improve weak example
@@ -347,8 +347,8 @@ describe("single line jsdoc comment", () => {
         0,
         4,
         0,
-        4
-      )
+        4,
+      ),
     )
 
     // FIXME: adds line to the comment that has active cursor & messes up selection
@@ -363,8 +363,8 @@ describe("single line jsdoc comment", () => {
         0,
         6,
         -1,
-        28
-      )
+        28,
+      ),
     )
     // FIXME: adds line to the comment that has active cursor & messes up spacing & selection
     describe.skip(
@@ -378,8 +378,8 @@ describe("single line jsdoc comment", () => {
         0,
         6,
         -1,
-        28
-      )
+        28,
+      ),
     )
     describe(
       "when selection is all of the text and indented",
@@ -392,8 +392,8 @@ describe("single line jsdoc comment", () => {
         0,
         4,
         0,
-        4
-      )
+        4,
+      ),
     )
     describe(
       "when reversed selection is all of the text and indented",
@@ -406,8 +406,8 @@ describe("single line jsdoc comment", () => {
         0,
         4,
         0,
-        4
-      )
+        4,
+      ),
     )
   })
 
@@ -426,8 +426,8 @@ describe("single line jsdoc comment", () => {
               2,
               18,
               0,
-              1
-            )
+              1,
+            ),
           )
 
           describe(
@@ -437,8 +437,8 @@ describe("single line jsdoc comment", () => {
               2,
               0,
               0,
-              0
-            )
+              0,
+            ),
           )
 
           describe(
@@ -448,8 +448,8 @@ describe("single line jsdoc comment", () => {
               2,
               3,
               0,
-              2
-            )
+              2,
+            ),
           )
 
           describe(
@@ -459,8 +459,8 @@ describe("single line jsdoc comment", () => {
               2,
               4,
               0,
-              1
-            )
+              1,
+            ),
           )
 
           describe(
@@ -470,8 +470,8 @@ describe("single line jsdoc comment", () => {
               2,
               5,
               0,
-              1
-            )
+              1,
+            ),
           )
 
           describe(
@@ -481,8 +481,8 @@ describe("single line jsdoc comment", () => {
               2,
               28,
               0,
-              1
-            )
+              1,
+            ),
           )
         })
         // TODO: implement
@@ -499,8 +499,8 @@ describe("single line jsdoc comment", () => {
               0,
               10,
               0,
-              1
-            )
+              1,
+            ),
           )
 
           describe(
@@ -510,8 +510,8 @@ describe("single line jsdoc comment", () => {
               0,
               0,
               0,
-              3
-            )
+              3,
+            ),
           )
 
           describe(
@@ -521,8 +521,8 @@ describe("single line jsdoc comment", () => {
               0,
               1,
               0,
-              2
-            )
+              2,
+            ),
           )
 
           describe(
@@ -532,8 +532,8 @@ describe("single line jsdoc comment", () => {
               0,
               2,
               0,
-              1
-            )
+              1,
+            ),
           )
 
           describe(
@@ -543,8 +543,8 @@ describe("single line jsdoc comment", () => {
               0,
               3,
               0,
-              1
-            )
+              1,
+            ),
           )
 
           describe(
@@ -554,8 +554,8 @@ describe("single line jsdoc comment", () => {
               0,
               25,
               0,
-              1
-            )
+              1,
+            ),
           )
         })
         // TODO: implement
@@ -572,8 +572,8 @@ describe("single line jsdoc comment", () => {
             1,
             21,
             0,
-            -1
-          )
+            -1,
+          ),
         )
         // TODO: can be improved by also aligning the comment
         describe(
@@ -583,8 +583,8 @@ describe("single line jsdoc comment", () => {
             2,
             21,
             0,
-            -1
-          )
+            -1,
+          ),
         )
         // FIXME: rm extra space
         describe(
@@ -594,8 +594,8 @@ describe("single line jsdoc comment", () => {
             2,
             21,
             0,
-            -2
-          )
+            -2,
+          ),
         )
       })
 
@@ -608,8 +608,8 @@ describe("single line jsdoc comment", () => {
               2,
               6,
               0,
-              0
-            )
+              0,
+            ),
           )
           describe(
             "when cursor's inside",
@@ -618,8 +618,8 @@ describe("single line jsdoc comment", () => {
               2,
               25,
               0,
-              -12
-            )
+              -12,
+            ),
           )
           // REVIEW: should this leave cursor just before comment tag instead of moving inside jsdoc?
           // FIXME: creates new comment instead of converting
@@ -630,8 +630,8 @@ describe("single line jsdoc comment", () => {
               2,
               15,
               0,
-              -9
-            )
+              -9,
+            ),
           )
           // FIXME: doesn't get rid of comment tag
           describe.skip(
@@ -641,8 +641,8 @@ describe("single line jsdoc comment", () => {
               2,
               16,
               0,
-              -10
-            )
+              -10,
+            ),
           )
           // FIXME: adds an extra space between jsdoc start and comment
           describe.skip(
@@ -652,8 +652,8 @@ describe("single line jsdoc comment", () => {
               2,
               17,
               0,
-              -11
-            )
+              -11,
+            ),
           )
           describe(
             "when cursor is just after space after comment tag",
@@ -662,8 +662,8 @@ describe("single line jsdoc comment", () => {
               2,
               18,
               0,
-              -12
-            )
+              -12,
+            ),
           )
           describe(
             "when cursor is at end of line comment",
@@ -672,8 +672,8 @@ describe("single line jsdoc comment", () => {
               2,
               40,
               0,
-              -12
-            )
+              -12,
+            ),
           )
         })
         // TODO: implement
@@ -690,12 +690,18 @@ describe("single line jsdoc comment", () => {
           1,
           12,
           0,
-          1
-        )
+          1,
+        ),
       )
       describe(
         "when it's alone on a line & cursor before it",
-        itHasCorrectOutputAndCursorPosition("singleConvertBlock.js", 1, 0, 0, 0)
+        itHasCorrectOutputAndCursorPosition(
+          "singleConvertBlock.js",
+          1,
+          0,
+          0,
+          0,
+        ),
       )
       describe(
         "when it's alone on a line & cursor after it",
@@ -704,8 +710,8 @@ describe("single line jsdoc comment", () => {
           1,
           30,
           0,
-          1
-        )
+          1,
+        ),
       )
 
       describe(
@@ -715,8 +721,8 @@ describe("single line jsdoc comment", () => {
           1,
           23,
           0,
-          1
-        )
+          1,
+        ),
       )
       describe(
         "when it's leading code",
@@ -725,8 +731,8 @@ describe("single line jsdoc comment", () => {
           2,
           18,
           0,
-          1
-        )
+          1,
+        ),
       )
       describe(
         "when it's trailing comment",
@@ -735,8 +741,8 @@ describe("single line jsdoc comment", () => {
           3,
           23,
           0,
-          -12
-        )
+          -12,
+        ),
       )
       describe(
         "when it's trailing comment inside comma",
@@ -745,8 +751,8 @@ describe("single line jsdoc comment", () => {
           2,
           23,
           0,
-          -10
-        )
+          -10,
+        ),
       )
       // FIXME: doesn't add space afterward
       describe.skip(
@@ -756,8 +762,8 @@ describe("single line jsdoc comment", () => {
           1,
           11,
           0,
-          2
-        )
+          2,
+        ),
       )
     })
   })
@@ -767,33 +773,45 @@ describe("remove existing jsdoc", () => {
   describe("when it's alone on a line", () => {
     describe(
       "when cursor is before comment",
-      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 0, 0, 0)
+      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 0, 0, 0),
     )
 
     describe(
       "when cursor's inside",
-      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 20, 0, -1)
+      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 20, 0, -1),
     )
     describe(
       "when cursor's at end",
-      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 31, 0, -4)
+      itHasCorrectOutputAndCursorPosition("singleRemove.js", 1, 31, 0, -4),
     )
   })
   describe(
     "when it's internal & surrounded by code",
-    itHasCorrectOutputAndCursorPosition("singleRemoveInternal.js", 1, 24, 0, -1)
+    itHasCorrectOutputAndCursorPosition(
+      "singleRemoveInternal.js",
+      1,
+      24,
+      0,
+      -1,
+    ),
   )
   describe(
     "when it's leading code",
-    itHasCorrectOutputAndCursorPosition("singleRemoveLeading.js", 2, 13, 0, -1)
+    itHasCorrectOutputAndCursorPosition("singleRemoveLeading.js", 2, 13, 0, -1),
   )
   describe(
     "when it's trailing code",
-    itHasCorrectOutputAndCursorPosition("singleRemoveTrailing.js", 1, 25, 0, -1)
+    itHasCorrectOutputAndCursorPosition(
+      "singleRemoveTrailing.js",
+      1,
+      25,
+      0,
+      -1,
+    ),
   )
   describe(
     "when it's unspaced",
-    itHasCorrectOutputAndCursorPosition("singleRemoveUnspaced.js", 1, 12, 0, 0)
+    itHasCorrectOutputAndCursorPosition("singleRemoveUnspaced.js", 1, 12, 0, 0),
   )
   describe(
     "when the whole line is selected from end to start",
@@ -806,8 +824,8 @@ describe("remove existing jsdoc", () => {
       0,
       -2,
       0,
-      0
-    )
+      0,
+    ),
   )
 })
 
@@ -825,8 +843,8 @@ describe("multi line jsdoc comment", () => {
         1,
         3,
         1,
-        3
-      )
+        3,
+      ),
     )
 
     describe(
@@ -841,8 +859,8 @@ describe("multi line jsdoc comment", () => {
         0,
         0,
         1,
-        3
-      )
+        3,
+      ),
     )
 
     describe(
@@ -856,8 +874,8 @@ describe("multi line jsdoc comment", () => {
         1,
         3,
         1,
-        3
-      )
+        3,
+      ),
     )
   })
 
@@ -873,8 +891,8 @@ describe("multi line jsdoc comment", () => {
         1,
         1,
         1,
-        0
-      )
+        0,
+      ),
     )
 
     describe(
@@ -889,8 +907,8 @@ describe("multi line jsdoc comment", () => {
         1,
         // TODO: consider not including JSDoc opening `/**` in selection and make next two params 1, 4
         0,
-        0
-      )
+        0,
+      ),
     )
 
     describe(
@@ -904,8 +922,8 @@ describe("multi line jsdoc comment", () => {
         1,
         1,
         1,
-        0
-      )
+        0,
+      ),
     )
   })
 
@@ -922,8 +940,8 @@ describe("multi line jsdoc comment", () => {
         -1,
         -5,
         0,
-        -2
-      )
+        -2,
+      ),
     )
 
     describe(
@@ -937,8 +955,8 @@ describe("multi line jsdoc comment", () => {
         -1,
         0,
         -1,
-        0
-      )
+        0,
+      ),
     )
 
     // TODO: single line multi line block comment
@@ -953,8 +971,8 @@ describe("multi line jsdoc comment", () => {
         -1,
         -3,
         -1,
-        -3
-      )
+        -3,
+      ),
     )
   })
 })

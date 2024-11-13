@@ -10,7 +10,7 @@ export const DEBUG_TESTS = process.env.DEBUG_TESTS === "true"
  */
 export const log = (...messages: unknown[]): void => {
   if (VERBOSE) {
-    console.log(...messages) // NOSONAR
+    console.log(...messages)
   }
 }
 
@@ -34,7 +34,7 @@ log.info = (...messages: unknown[]): void => {
  */
 log.warn = (...messages: unknown[]): void => {
   if (VERBOSE) {
-    console.warn(yellowBright("warn"), ...messages) // NOSONAR
+    console.warn(yellowBright("warn"), ...messages)
   }
 }
 
@@ -46,7 +46,7 @@ log.warn = (...messages: unknown[]): void => {
  */
 log.error = (...messages: unknown[]): void => {
   if (VERBOSE) {
-    console.error(red("error"), ...messages) // NOSONAR
+    console.error(red("error"), ...messages)
   }
 }
 

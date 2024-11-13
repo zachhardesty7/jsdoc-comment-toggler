@@ -11,7 +11,7 @@ import "source-map-support/register"
 
 export const run = (
   testsRoot: string,
-  cb: (error: Error | null, failures?: number) => void
+  cb: (error: Error | null, failures?: number) => void,
 ): void => {
   // Create the mocha test
   const mocha = new Mocha({
@@ -24,7 +24,7 @@ export const run = (
 
   const scratchpadUri = path.join(
     __dirname,
-    "../../../test/suite/scratchpad.js"
+    "../../../test/suite/scratchpad.js",
   )
 
   main()
@@ -35,7 +35,7 @@ export const run = (
     console.time(`${cyan("info")} Time to init all tests`)
 
     const document = await vscode.workspace.openTextDocument(
-      vscode.Uri.file(scratchpadUri)
+      vscode.Uri.file(scratchpadUri),
     )
     await vscode.window.showTextDocument(document)
     // editor isn't immediately available when `showTextDocument` promise fulfills

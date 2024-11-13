@@ -10,7 +10,7 @@ export interface ExtensionConfig {
  * @see https://github.com/Sertion/vscode-gitblame/blob/main/src/util/property.ts
  */
 export const getConfigKey = <TKey extends keyof ExtensionConfig>(
-  name: TKey
+  name: TKey,
 ): ExtensionConfig[TKey] =>
   vscode.workspace
     .getConfiguration("jsdoc-comment-toggler")

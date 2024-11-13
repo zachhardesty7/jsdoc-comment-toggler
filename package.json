@@ -84,6 +84,7 @@
     "watch": "tsc -watch -p ./",
     "_pack": "vsce package",
     "_upload": "vsce publish",
+    "pack": "npm-run-all clean compile _pack",
     "pub": "npm-run-all clean compile _pack _upload",
     "_run-test": "node --env-file .env --async-stack-traces ./out/test/runTest.js",
     "test": "npm-run-all compile _run-test"

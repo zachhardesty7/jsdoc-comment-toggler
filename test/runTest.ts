@@ -1,5 +1,3 @@
-/* eslint-disable import/no-unresolved, import/extensions */
-
 import path from "path"
 import { cyan } from "ansi-colors"
 

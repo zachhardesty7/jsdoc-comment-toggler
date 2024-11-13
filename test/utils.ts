@@ -51,6 +51,9 @@ log.error = (...messages: unknown[]): void => {
 }
 
 const testedFiles = new Set<string>()
+/**
+ * @returns files which have already been tested
+ */
 export function getTestedFiles(): Set<string> {
   return testedFiles
 }

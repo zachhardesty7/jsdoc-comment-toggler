@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
 // useful API pages
 // https://code.visualstudio.com/api/references/vscode-api#TextEditor
 // https://code.visualstudio.com/api/references/vscode-api#TextDocument
@@ -7,8 +6,8 @@
 // https://code.visualstudio.com/api/references/vscode-api#Position
 // https://code.visualstudio.com/api/references/vscode-api#Range
 
-import * as vscode from "vscode" // eslint-disable-line import/no-unresolved
-import { getConfigKey } from "./config" // eslint-disable-line import/no-unresolved
+import * as vscode from "vscode"
+import { getConfigKey } from "./config"
 
 const DEBUG = process.env.DEBUG_EXTENSION === "true"
 
@@ -516,7 +515,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             editor.selection.end,
             editor.selection.end.translate({ characterDelta: 1 })
           ),
-          ` */${nextChar !== MAGIC_CHARACTER ? nextChar : ""}`
+          ` */${nextChar === MAGIC_CHARACTER ? "" : nextChar}`
         )
       } else if (
         blockCommentStartIndex > -1 &&
@@ -614,7 +613,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
 
           editBuilder.insert(
             new vscode.Position(lineFirst.lineNumber, blockCommentStartIndex),
-            `/**${firstChar !== " " ? " " : ""}`
+            `/**${firstChar === " " ? "" : " "}`
           )
         }
       } else if (
@@ -676,7 +675,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
           )
           editBuilder.insert(
             new vscode.Position(lineFirst.lineNumber, lineCommentIndex),
-            `/**${firstChar !== " " ? " " : ""}`
+            `/**${firstChar === " " ? "" : " "}`
           )
 
           const lastChar = editor.document.getText(
@@ -805,7 +804,7 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
             isLineBlank
               ? ` */`
               : ` */\n${prevChars}${
-                  nextChar !== MAGIC_CHARACTER ? nextChar : ""
+                  nextChar === MAGIC_CHARACTER ? "" : nextChar
                 }`
           )
         }
@@ -821,31 +820,29 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     // target all lines between opening tag exclusive and closing tag inclusive
     for (let i = lineFirst.lineNumber; i <= lineLast.lineNumber; i += 1) {
       const line = editor.document.lineAt(i)
-      if (line) {
-        const contentStart = line.text.slice(
-          line.firstNonWhitespaceCharacterIndex
+      const contentStart = line.text.slice(
+        line.firstNonWhitespaceCharacterIndex
+      )
+      const commentTag = contentStart.match(LINE_COMMENT_TAG)
+      if (commentTag) {
+        const firstChar = getNextChar(
+          new vscode.Position(
+            line.lineNumber,
+            line.firstNonWhitespaceCharacterIndex + commentTag[0].length
+          )
         )
-        const commentTag = contentStart.match(LINE_COMMENT_TAG)
-        if (commentTag) {
-          const firstChar = getNextChar(
-            new vscode.Position(
-              line.lineNumber,
-              line.firstNonWhitespaceCharacterIndex + commentTag[0].length
-            )
-          )
 
-          editBuilder.replace(
-            new vscode.Range(
-              line.lineNumber,
-              line.firstNonWhitespaceCharacterIndex,
-              line.lineNumber,
-              line.firstNonWhitespaceCharacterIndex + commentTag[0].length
-            ),
-            ` *${firstChar === " " ? "" : " "}`
-          )
-        } else {
-          editBuilder.insert(getContentStartPos(line), " * ")
-        }
+        editBuilder.replace(
+          new vscode.Range(
+            line.lineNumber,
+            line.firstNonWhitespaceCharacterIndex,
+            line.lineNumber,
+            line.firstNonWhitespaceCharacterIndex + commentTag[0].length
+          ),
+          ` *${firstChar === " " ? "" : " "}`
+        )
+      } else {
+        editBuilder.insert(getContentStartPos(line), " * ")
       }
     }
 

@@ -485,9 +485,23 @@ describe("single line jsdoc comment", () => {
             ),
           )
         })
-        // TODO: implement
-        // describe("when selection", () => {
-        // })
+        // TODO: implement the rest
+        describe("when selection", () => {
+          describe.skip(
+            "when selection is entire line (triple click)",
+            itHasCorrectOutputAndSelectionPositions(
+              "singleConvertLine.js",
+              2,
+              0,
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+            ),
+          )
+        })
       })
 
       describe("when it's at start of a line", () => {

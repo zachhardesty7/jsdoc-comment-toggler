@@ -880,51 +880,71 @@ describe("multi line jsdoc comment", () => {
   })
 
   describe("convert", () => {
-    describe(
-      "selection not before or at end (internal)",
-      itHasCorrectOutputAndSelectionPositions(
-        "multiConvertLine.js",
-        2,
-        9,
-        1,
-        9,
-        1,
-        1,
-        1,
-        0,
-      ),
-    )
+    describe("when it's a line comment", () => {
+      describe(
+        "selection not before or at end (internal)",
+        itHasCorrectOutputAndSelectionPositions(
+          "multiConvertLine.js",
+          2,
+          9,
+          1,
+          9,
+          1,
+          1,
+          1,
+          0,
+        ),
+      )
 
-    describe(
-      "selection is before first non-whitespace char",
-      itHasCorrectOutputAndSelectionPositions(
-        "multiConvertLine.js",
-        2,
-        9,
-        1,
-        1,
-        1,
-        1,
-        // TODO: consider not including JSDoc opening `/**` in selection and make next two params 1, 4
-        0,
-        0,
-      ),
-    )
+      describe(
+        "selection is before first non-whitespace char",
+        itHasCorrectOutputAndSelectionPositions(
+          "multiConvertLine.js",
+          2,
+          9,
+          1,
+          1,
+          1,
+          1,
+          // TODO: consider not including JSDoc opening `/**` in selection and make next two params 1, 4
+          0,
+          0,
+        ),
+      )
 
-    describe(
-      "selection starts at end",
-      itHasCorrectOutputAndSelectionPositions(
-        "multiConvertLine.js",
-        2,
-        15,
-        1,
-        9,
-        1,
-        1,
-        1,
-        0,
-      ),
-    )
+      describe(
+        "selection starts at end",
+        itHasCorrectOutputAndSelectionPositions(
+          "multiConvertLine.js",
+          2,
+          15,
+          1,
+          9,
+          1,
+          1,
+          1,
+          0,
+        ),
+      )
+
+      describe("when it's nested in JSDoc", () => {
+        // TODO: can be improved by also aligning the comment
+        describe.skip(
+          "when some lines have a star proceeding them",
+          itHasCorrectOutputAndSelectionPositions(
+            "multiConvertLineNestedA.js",
+            2,
+            30,
+            3,
+            30,
+            0,
+            -2,
+            0,
+            -1,
+          ),
+        )
+      })
+    })
   })
 
   describe("remove", () => {

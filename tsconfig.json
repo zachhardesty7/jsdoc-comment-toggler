@@ -20,6 +20,7 @@
   "exclude": [
     "node_modules",
     ".vscode-test",
+    "test/__scratch",
     "test/examples",
     "test/results",
     "test/suite/scratchpad.js"

@@ -1,6 +1,5 @@
-[![version](https://img.shields.io/vscode-marketplace/v/zachhardesty.jsdoc-comment-toggler.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
-[![last updated](https://img.shields.io/visual-studio-marketplace/last-updated/zachhardesty.jsdoc-comment-toggler?color=0fCC10&style=flat-square)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
-[![downloads](https://img.shields.io/vscode-marketplace/d/zachhardesty.jsdoc-comment-toggler.svg?color=0fCC10&style=flat-square)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
+[![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=zachhardesty.jsdoc-comment-toggler)
+[![GitHub Repo stars](https://img.shields.io/github/stars/zachhardesty7/jsdoc-comment-toggler.svg?style=flat-square)](https://github.com/zachhardesty7/jsdoc-comment-toggler/stargazers/)
 [![license](https://img.shields.io/github/license/zachhardesty7/jsdoc-comment-toggler.svg?color=0fCC10&style=flat-square)](https://github.com/zachhardesty7/jsdoc-comment-toggler/blob/master/LICENSE)
 
 # jsdoc comment toggler
@@ -8,7 +7,7 @@
 extension to toggle a JSDoc comment on the target text, properly indenting and spacing
 everything
 
-no longer will you need to flip around between comment tags while converting a
+no longer will you need to jump around between comment tags while converting a
 JavaScript block or line comment into more formal JSDoc; put your cursor inside a
 comment and bam
 

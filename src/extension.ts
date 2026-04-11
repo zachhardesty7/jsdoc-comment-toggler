@@ -405,6 +405,8 @@ export const toggleJSDocComment = async (): Promise<boolean> => {
     ) {
       log("removing single line jsdoc")
 
+      // TODO: consider `getConfigKey("toggleBetweenNoComment")`
+
       // trailing
       if (
         jsdocEnd.index + jsdocEnd[0].length ===

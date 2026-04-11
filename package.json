@@ -48,6 +48,11 @@
     "configuration": {
       "title": "JSDoc Comment Toggler",
       "properties": {
+        "jsdoc-comment-toggler.toggleBetweenNoComment": {
+          "type": "boolean",
+          "default": false,
+          "description": "When running Toggle, change between no comment and a JSDoc comment."
+        },
         "jsdoc-comment-toggler.disableCursorHack": {
           "type": "boolean",
           "default": false,

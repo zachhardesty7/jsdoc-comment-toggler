@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 
 export interface ExtensionConfig {
   disableCursorHack: boolean
+  toggleBetweenNoComment: boolean
 }
 
 /**

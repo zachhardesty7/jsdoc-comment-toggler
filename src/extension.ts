@@ -152,10 +152,8 @@ function getContentStartPos(line: vscode.TextLine | number): vscode.Position {
 
   return new vscode.Position(
     typeof line === "number" ? line : line.lineNumber,
-    (typeof line === "number"
-      ? editor.document.lineAt(line)
-      : line
-    ).firstNonWhitespaceCharacterIndex,
+    (typeof line === "number" ? editor.document.lineAt(line) : line)
+      .firstNonWhitespaceCharacterIndex,
   )
 }
 
